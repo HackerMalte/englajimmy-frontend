@@ -16,7 +16,10 @@ type RsvpCreate = {
 }
 
 export function RsvpForm() {
-  const [submitted, setSubmitted] = useState(false)
+  const [submitResult, setSubmitResult] = useState<{ submitted: boolean; updated: boolean }>({
+    submitted: false,
+    updated: false,
+  })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -73,7 +76,8 @@ export function RsvpForm() {
         return
       }
 
-      setSubmitted(true)
+      const data = await res.json().catch(() => ({}))
+      setSubmitResult({ submitted: true, updated: data.updated === true })
     } catch (err) {
       setError('Kunde inte skicka. Kontrollera nätverket och försök igen.')
     } finally {
@@ -81,11 +85,15 @@ export function RsvpForm() {
     }
   }
 
-  if (submitted) {
+  if (submitResult.submitted) {
     return (
       <div className="text-center py-12 text-white/90">
         <p className="font-serif text-xl mb-2">Tack!</p>
-        <p className="text-sm">Vi har fått er anmälan.</p>
+        <p className="text-sm">
+          {submitResult.updated
+            ? 'Din OSA har uppdaterats.'
+            : 'Vi har fått din anmälan.'}
+        </p>
       </div>
     )
   }
