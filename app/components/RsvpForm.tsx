@@ -55,8 +55,19 @@ export function RsvpForm() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
+
+        // 409 = duplicate email
+        if (res.status === 409) {
+          setError('En OSA med denna e-postadress har redan skickats in.')
+          setLoading(false)
+          return
+        }
+
+        // Handle validation errors (detail is array) or plain message (detail is string)
         const msg =
-          data.detail?.[0]?.msg ?? data.message ?? `Något gick fel (${res.status})`
+          typeof data.detail === 'string'
+            ? data.detail
+            : data.detail?.[0]?.msg ?? data.message ?? `Något gick fel (${res.status})`
         setError(msg)
         setLoading(false)
         return
