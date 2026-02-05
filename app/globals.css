@@ -4,8 +4,7 @@
 
 @font-face {
   font-family: 'Le Jour Script';
-  src: url('/fonts/LeJourScript.woff2') format('woff2'),
-       url('/fonts/LeJourScript.woff') format('woff');
+  src: url('/fonts/LeJourScript-Eaqpg.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -17,6 +16,14 @@
   --ink: #2c2c2c;
   --stone: #6b6b6b;
   --border: #e5e5e5;
+  --pastel-pink: #d4a6a8;
+  --pastel-pink-dark: #b8888a;
+  --pastel-green: #bcbfab;
+  --pastel-green-dark: #9a9d8d;
+  --gul: #f3dbaa;
+  --gul-dark: #d4bc8c;
+  --box-radius: 56px;
+  --box-min-height: 150px;
 }
 
 html {
@@ -24,7 +31,10 @@ html {
 }
 
 body {
-  @apply bg-cream text-charcoal antialiased;
+  background-color: var(--pastel-pink);
+  color: var(--charcoal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @layer utilities {
