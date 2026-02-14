@@ -188,7 +188,8 @@ export function RsvpForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 mt-4 text-sm font-medium text-gray-800 bg-[#B8D4E3] rounded hover:bg-[#A3C5D9] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full py-3 mt-4 text-sm font-medium text-gray-800 rounded hover:opacity-80 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        style={{ backgroundColor: 'var(--pastel-green)' }}
       >
         {loading ? 'Skickar…' : 'Skicka'}
       </button>

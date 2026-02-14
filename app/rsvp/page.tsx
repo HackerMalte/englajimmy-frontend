@@ -5,7 +5,7 @@ export default function RsvpPage() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-pastel-pink pt-20 sm:pt-24 pb-16">
+      <main className="min-h-screen bg-white pt-20 sm:pt-24 pb-16">
         <div className="max-w-md mx-auto px-4 sm:px-6">
           <h1 className="font-serif text-2xl sm:text-3xl text-gray-800 text-center mb-2">
             OSA

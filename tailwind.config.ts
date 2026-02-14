@@ -8,7 +8,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        script: ['"Le Jour Script", cursive'],
+        script: ['"Great Vibes", cursive'],
         serif: ['Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
         sans: ['system-ui', 'sans-serif'],
       },

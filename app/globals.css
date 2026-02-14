@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'Le Jour Script';
-  src: url('/fonts/LeJourScript-Eaqpg.otf') format('opentype');
+  font-family: 'Great Vibes';
+  src: url('/fonts/GreatVibes-Regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -22,7 +22,7 @@
   --pastel-green-dark: #9a9d8d;
   --gul: #f3dbaa;
   --gul-dark: #d4bc8c;
-  --box-radius: 56px;
+  --box-radius: 24px;
   --box-min-height: 150px;
 }
 
@@ -31,7 +31,7 @@ html {
 }
 
 body {
-  background-color: var(--pastel-pink);
+  background-color: #ffffff;
   color: var(--charcoal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
