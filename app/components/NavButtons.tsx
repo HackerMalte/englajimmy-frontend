@@ -29,7 +29,7 @@ export function NavButtons({
           key={item.href}
           href={item.href}
           onClick={onItemClick}
-          className="text-sm text-gray-800 bg-pastel-green hover:opacity-80 px-4 py-2 rounded-[162px] transition-colors whitespace-nowrap uppercase tracking-wide"
+          className="text-sm font-bold text-gray-800 hover:text-gray-600 px-2 py-1 border-b-2 border-gray-800 transition-colors whitespace-nowrap uppercase tracking-wide"
         >
           {item.label}
         </Link>

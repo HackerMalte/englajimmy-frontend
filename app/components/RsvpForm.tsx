@@ -22,6 +22,7 @@ export function RsvpForm() {
   })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [hasAllergies, setHasAllergies] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -33,8 +34,9 @@ export function RsvpForm() {
     const name = (formData.get('name') as string).trim()
     const email = (formData.get('email') as string).trim()
     const coming = formData.get('coming') === 'yes'
-    const allergies = (formData.get('allergies') as string)?.trim() || null
-    const transport_assist = formData.get('transport_assist') === 'on'
+    const allergiesText = (formData.get('allergies') as string)?.trim() || null
+    const allergies = formData.get('has_allergies') === 'yes' ? (allergiesText || null) : null
+    const transport_assist = formData.get('transport_assist') === 'yes'
 
     const body: RsvpCreate = {
       name: name.slice(0, 255),
@@ -89,11 +91,21 @@ export function RsvpForm() {
     return (
       <div className="text-center py-12 text-gray-800">
         <p className="font-script text-2xl mb-2">Tack!</p>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 mb-6">
           {submitResult.updated
             ? 'Din OSA har uppdaterats.'
             : 'Vi har fått din anmälan.'}
         </p>
+        <button
+          onClick={() => {
+            setSubmitResult({ submitted: false, updated: false })
+            setHasAllergies(false)
+          }}
+          className="text-sm font-medium text-gray-800 px-6 py-2 rounded hover:opacity-80 transition-colors"
+          style={{ backgroundColor: 'var(--pastel-green)' }}
+        >
+          Skicka en till OSA
+        </button>
       </div>
     )
   }
@@ -155,28 +167,66 @@ export function RsvpForm() {
       </div>
 
       <div>
-        <label htmlFor="allergies" className="block text-sm text-gray-700 mb-1.5">
-          Allergier eller matpreferenser <span className="text-gray-400">(valfritt, max 500 tecken)</span>
-        </label>
-        <input
-          id="allergies"
-          name="allergies"
-          type="text"
-          maxLength={500}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-800 placeholder-gray-400 rounded focus:outline-none focus:ring-1 focus:ring-[#B8D4E3] focus:border-[#B8D4E3]"
-          placeholder="T.ex. vegetarian, glutenfritt"
-        />
+        <span className="block text-sm text-gray-700 mb-3">Allergi eller matpreferenser?</span>
+        <div className="flex gap-6">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="has_allergies"
+              value="yes"
+              onChange={() => setHasAllergies(true)}
+              className="w-4 h-4 border-gray-300 bg-gray-50 text-[#B8D4E3] focus:ring-[#B8D4E3]"
+            />
+            <span className="text-gray-800">Ja</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="has_allergies"
+              value="no"
+              defaultChecked
+              onChange={() => setHasAllergies(false)}
+              className="w-4 h-4 border-gray-300 bg-gray-50 text-[#B8D4E3] focus:ring-[#B8D4E3]"
+            />
+            <span className="text-gray-800">Nej</span>
+          </label>
+        </div>
+        {hasAllergies && (
+          <input
+            id="allergies"
+            name="allergies"
+            type="text"
+            required
+            maxLength={500}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-800 placeholder-gray-400 rounded focus:outline-none focus:ring-1 focus:ring-[#B8D4E3] focus:border-[#B8D4E3] mt-3"
+            placeholder="T.ex. vegetarian, glutenfritt"
+          />
+        )}
       </div>
 
       <div>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            name="transport_assist"
-            className="w-4 h-4 border-gray-300 bg-gray-50 text-[#B8D4E3] rounded focus:ring-[#B8D4E3]"
-          />
-          <span className="text-sm text-gray-800">Jag behöver hjälp med transport</span>
-        </label>
+        <span className="block text-sm text-gray-700 mb-3">Behöver du hjälp med transport?</span>
+        <div className="flex gap-6">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="transport_assist"
+              value="yes"
+              className="w-4 h-4 border-gray-300 bg-gray-50 text-[#B8D4E3] focus:ring-[#B8D4E3]"
+            />
+            <span className="text-gray-800">Ja</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="transport_assist"
+              value="no"
+              defaultChecked
+              className="w-4 h-4 border-gray-300 bg-gray-50 text-[#B8D4E3] focus:ring-[#B8D4E3]"
+            />
+            <span className="text-gray-800">Nej</span>
+          </label>
+        </div>
       </div>
 
       {error && (

@@ -9,6 +9,7 @@ const timelineItems = [
   { title: 'Hills', description: '17:30', objectLabel: 'object 2', image: '/images/mingel.png' },
   { title: 'Middag', description: '18:30', objectLabel: 'object 3', image: '/images/middag.png' },
   { title: 'Party', description: '22:00', objectLabel: 'object 4', image: '/images/party.png' },
+  { title: 'Natta käk', description: '23:30', objectLabel: 'object 5', image: '/images/sausage.jpg' },
 ]
 
 export default function Home() {
@@ -22,12 +23,6 @@ export default function Home() {
       <main className="bg-white">
         {/* Hero section with image */}
         <section id="hem" className="relative">
-          {/* Logo overlay in top left */}
-          <img
-            src="/images/ej_logo.svg"
-            alt="E&J Logo"
-            className="absolute top-4 left-4 w-24 sm:w-32 h-auto z-10"
-          />
           <Image
             src="/images/ej_main_img.png"
             alt="Engla and Jimmy"
@@ -47,7 +42,13 @@ export default function Home() {
               Vår historia
             </h2>
             <p className="text-gray-600 text-sm mb-12">
-              Här är några viktiga år i vår gemensamma resa.
+            Vi blev ihopmatchade av våra vänner, och det visade sig vara en riktigt bra match, efter en sushidejt i slutet av 2019 blev det vi två.
+            <br />  <br /> 
+            Sedan dess har livet rullat på i vårt tempo. Vi har skaffat hund, flyttat över 126 mil norrut för att studera och sedan hittat hem igen. Längs vägen har det blivit en hel del spa, väldigt mycket god mat och ännu mer filmtittande.
+            <br /> <br /> 
+            Det senaste året har fyllts av nya rutiner: virkande i soffan och racketsport som balanserar upp myset. Små saker som tillsammans blivit vårt vardagsliv.
+            <br /> <br /> 
+            Nu ser vi fram emot nästa kapitel. År 2026 gifter vi oss, det vill vi fira tillsammans med dig! 
             </p>
             
             {/* Timeline circles - responsive wrap */}
@@ -61,19 +62,24 @@ export default function Home() {
                 { year: '2024', image: '/images/2024.jpeg' },
                 { year: '2025', image: '/images/2025.JPEG' },
               ].map((item) => (
-                <div key={item.year} className="flex flex-col items-center">
-                  <span className="text-sm text-gray-700 mb-2">{item.year}</span>
-                  <div className="w-48 h-48 rounded-full border-2 border-black overflow-hidden">
-                    <img src={item.image} alt={item.year} className="w-full h-full object-cover" />
-                  </div>
+                <div key={item.year} className="flex flex-col items-center w-48">
+                  <span className="font-script text-2xl text-gray-700 mb-2">{item.year}</span>
+                  <img src={item.image} alt={item.year} className="w-full h-auto rounded-lg" />
                 </div>
               ))}
             </div>
           </div>
         </section>
 
+        {/* Welcome/Date section */}
+        <section>
+          <div className="max-w-md mx-auto">
+            <img src="/images/date.png" alt="Engla & Jimmy - 22 Augusti 2026" className="w-full h-auto" />
+          </div>
+        </section>
+
         {/* Info boxes section */}
-        <section className="w-full bg-white py-16">
+        <section id="info" className="w-full bg-white py-16">
           {/* Box 1 - Före Bröllopet */}
           <InfoCard
             title="Före Bröllopet"
@@ -119,6 +125,10 @@ export default function Home() {
               <p className="mt-1">📍 Adress: Hills Golfklubb, 437 40 Mölndal</p>
               <p className="mt-1">🍽 Middag och fest följer efter ankomst</p>
             </div>
+            <div>
+              <p className="font-semibold mb-1">Middag</p>
+              <p>Middagen består av förrätt, varmrätt och efterrätt. Vi bjuder på dryck till miglet, middagen och kaffet. Vi öppnar baren vid 22:00 med after work priser.</p>
+            </div>
           </InfoCard>
 
           {/* Box 3 - Efter Bröllopet */}
@@ -135,7 +145,7 @@ export default function Home() {
         </section>
 
         {/* Timeline section - Vertical on mobile, Horizontal on desktop */}
-        <section className="w-full bg-white pt-16">
+        <section className="w-full bg-white">
           
           {/* Mobile: Vertical timeline */}
           <div className="min-[900px]:hidden px-4">
