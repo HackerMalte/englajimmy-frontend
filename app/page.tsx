@@ -88,21 +88,38 @@ export default function Home() {
           >
             <div>
               <p className="font-semibold mb-1">Klädkod</p>
-              <p>Sommarfin. Välj gärna något ni känner er fina och bekväma i — det viktigaste för oss är att ni trivs och är redo för en dag fylld av kärlek och fest.</p>
+              <p>Sommarfin</p>
             </div>
             <div>
               <p className="font-semibold mb-1">Presenter</p>
-              <p>Er närvaro är den finaste presenten vi kan få.</p> 
+              <p>Din närvaro är den finaste presenten vi kan få.</p> 
               
-                <p className="mt-1">För er som ändå önskar uppmärksamma oss lite extra och vill ha lite inspiration kring vad brudparet önskar sig, är ni varmt välkomna att kontakta vår toastmadam.</p>
-                <p className="mt-1">De hjälper gärna till med tips och idéer. </p>
-                <p className="mt-1">Kontakt: [toastmadams namn och kontaktuppgifter]</p>
+                <p className="mt-1">För dig som ändå önskar uppmärksamma oss lite extra och vill ha lite inspiration kring vad vi önskar oss, är du varmt välkommen att kontakta våra toastmadamer. De hjälper gärna till med tips och idéer!</p>
+                
             </div>
             <div>
-              <p className="font-semibold mb-1">Frågor till Toastmadamer</p>
-              <p>Vill du hålla tal, göra ett spex eller bidra med något annat under middagen? Anmäl detta senast 10:e augusti, så att allt kan planeras på bästa sätt.</p>
-              <p className="mt-1">Här kan du även vända dig med frågor, idéer eller önskemål kring möhippa/svensexa eller andra överraskningar inför bröllopet.</p>
-              <p className="mt-1">Kontakt: [telefonnummer/e-post]</p>
+              <p className="font-semibold mb-1">Kontakt med våra Toastmadamer</p>
+              <p>Vill du hålla tal, göra ett spex eller bidra med något annat under middagen? Anmäl detta senast 10:e augusti.</p>
+              <p className="mt-1">Hit kan du även vända dig om du har en fråga om bröllopet.</p>
+            </div>
+            <div>
+              <p className="font-semibold mb-1">Kontakt</p>
+              <div className="space-y-2">
+                <p>
+                  <span className="underline">Elise Harrysson</span>
+                  <br />
+                  0703-194044
+                  <br />
+                  elise.bergkvist@gmail.com
+                </p>
+                <p>
+                  <span className="underline">Axélia Hamrén</span>
+                  <br />
+                  0706-825919
+                  <br />
+                  axeliahamren@icloud.com
+                </p>
+              </div>
             </div>
           </InfoCard>
 
@@ -116,22 +133,43 @@ export default function Home() {
           >
             <div>
               <p className="font-semibold mb-1">Vigsel</p>
-              <p>16:00 på Onsala kyrka</p>
-              <p className="mt-1">Adress: Prästgårdsvägen 16, 439 31 Onsala.</p>
+              <p>16:00 i Onsala kyrka</p>
+              <p className="mt-1">
+                Adress:{' '}
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Pr%C3%A4stg%C3%A5rdsv%C3%A4gen+16%2C+439+31+Onsala"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  Prästgårdsvägen 16, 439 31 Onsala
+                </a>
+                .
+              </p>
             </div>
             <div>
               <p className="font-semibold mb-1">Transport</p>
               <p>Efter vigseln tar vi oss vidare mot festlokalen. Transport sker med eget fordon, behöver du hjälp med transport ange det i OSA formuläret.</p>
-              <p className="mt-1">Mer detaljer kring transporten kommer närmare bröllopsdagen.</p>
+              
             </div>
             <div>
               <p className="font-semibold mb-1">Hills Golf and Sports Club</p>
               <p>Bröllopsfesten hålls på Hills Golf and Sports Club, där vi ser fram emot middag, tal, skratt och dans fram till 01:00.</p>
-              <p className="mt-1">Adress: Hills väg 2, 431 51 Mölndal</p>
+              <p className="mt-1">
+                Adress:{' '}
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Hills+v%C3%A4g+2%2C+431+51+M%C3%B6lndal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  Hills väg 2, 431 51 Mölndal
+                </a>
+              </p>
             </div>
             <div>
               <p className="font-semibold mb-1">Middag</p>
-              <p>Middagen består av förrätt, varmrätt och efterrätt. Vi bjuder på dryck till minglet, middagen och kaffet. Vi öppnar baren vid 22:00 med after work priser.</p>
+              <p>Middagen består av förrätt, varmrätt och efterrätt. Vi bjuder på dryck under minglet och middagen. Baren öppnar vid 22 med after work priser.</p>
             </div>
           </InfoCard>
 
@@ -272,7 +310,7 @@ export default function Home() {
               OSA
             </h2>
             <p className="text-black text-center text-sm mb-10">
-              Vi hoppas att ni vill fira med oss. Svara senast 1 juni.
+              Vi hoppas att du vill fira med oss. Svara senast 1 juni.
             </p>
             <RsvpForm />
           </div>

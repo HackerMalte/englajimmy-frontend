@@ -21,9 +21,8 @@ export function InfoCard({ title, children, bgColor, borderColor, align }: InfoC
 
   return (
     <div className={`flex ${isLeft ? 'justify-start' : 'justify-end'} mb-6`}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-[85%] sm:w-[45%] px-6 py-3 border-2 ${borderSide} text-left transition-all duration-300 cursor-pointer`}
+      <div
+        className={`w-[85%] sm:w-[45%] px-6 py-3 border-2 ${borderSide} text-left transition-all duration-300`}
         style={{
           backgroundColor: bgColor,
           borderColor: borderColor,
@@ -32,12 +31,16 @@ export function InfoCard({ title, children, bgColor, borderColor, align }: InfoC
       >
         <div className={`flex items-center justify-between ${!isLeft ? 'flex-row-reverse' : ''}`}>
           <h3 className="font-script text-2xl text-black">{title}</h3>
-          <div className="flex items-center gap-2 bg-white/80 rounded-full px-3 py-1">
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex items-center gap-2 bg-white/80 rounded-full px-3 py-1"
+          >
             {!isOpen && <span className="text-black text-xs">klicka här</span>}
             <span className={`text-black text-xs transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
               ▼
             </span>
-          </div>
+          </button>
         </div>
 
         {isOpen && (
@@ -45,7 +48,7 @@ export function InfoCard({ title, children, bgColor, borderColor, align }: InfoC
             {children}
           </div>
         )}
-      </button>
+      </div>
     </div>
   )
 }
