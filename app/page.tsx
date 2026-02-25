@@ -115,6 +115,11 @@ export default function Home() {
             align="right"
           >
             <div>
+              <p className="font-semibold mb-1">Vigsel</p>
+              <p>16:00 på Onsala kyrka</p>
+              <p className="mt-1">Adress: Prästgårdsvägen 16, 439 31 Onsala.</p>
+            </div>
+            <div>
               <p className="font-semibold mb-1">Transport</p>
               <p>Efter vigseln tar vi oss vidare mot festlokalen. Transport sker med eget fordon, behöver du hjälp med transport ange det i OSA formuläret.</p>
               <p className="mt-1">Mer detaljer kring transporten kommer närmare bröllopsdagen.</p>
