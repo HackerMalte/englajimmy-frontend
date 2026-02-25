@@ -38,19 +38,17 @@ export default function Home() {
         {/* Timeline section */}
         <section id="datum" className="py-16 px-4">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="font-script text-3xl sm:text-4xl text-gray-800 mb-4">
+            <h2 className="font-script text-3xl sm:text-4xl text-black mb-4">
               Vår historia
             </h2>
-            <p className="text-gray-600 text-sm mb-12">
-            Vi blev ihopmatchade av våra vänner, och det visade sig vara en riktigt bra match, efter en sushidejt i slutet av 2019 blev det vi två.
-            <br />  <br /> 
-            Sedan dess har livet rullat på i vårt tempo. Vi har skaffat hund, flyttat över 126 mil norrut för att studera och sedan hittat hem igen. Längs vägen har det blivit en hel del spa, väldigt mycket god mat och ännu mer filmtittande.
+            <p className="text-black text-sm mb-12">
+            Vår historia började genom gemensamma vänner som, med en liten knuff i rätt riktning, matchade ihop oss. Det som först var en nyfiken introduktion växte snabbt till något mer. Vi började tillbringa allt mer tid tillsammans och sommaren gled sakta över i höst. Någonstans bland sena kvällar, långa samtal och många skratt växte en självklarhet fram. Det var en känsla av att det här var början på något alldeles speciellt. I slutet av 2019, på en sushi-dejt, bestämde vi oss för att det skulle vara vi.
             <br /> <br /> 
-            Det senaste året har fyllts av nya rutiner: virkande i soffan och racketsport som balanserar upp myset. Små saker som tillsammans blivit vårt vardagsliv.
-            <br /> <br /> 
-            Nu ser vi fram emot nästa kapitel. År 2026 gifter vi oss, det vill vi fira tillsammans med dig! 
+            År 2021 tog livet oss åt olika håll, men bara geografiskt. Jimmy började plugga i Luleå medans Engla gjorde sin militärtjänst i Halmstad. Plötsligt var vi särbos, med ungefär 120 mil mellan oss. Det blev ett år fyllt av längtan och flygresor.<br /> <br /> 
+            År 2022 flyttade Engla upp till Luleå för att börja plugga, och äntligen fick vi bli sambos på riktigt. Tillsammans skapade vi vårt hem och vår vardag. År 2023 utökades familjen när vår älskade hund Maestro kom in i våra liv och fyllde det med ännu mer kärlek och bus.<br /> <br /> 
+            Under 2025 tog vi examen, packade ihop vårt liv och flyttade ner till Göteborg igen. Det var dags att börja nästa kapitel med jobb och nya drömmar. På vår 6-årsdag, den 1 november 2025, förlovade vi oss vilket också var ett självklart steg i vår resa tillsammans. <br /> <br /> 
+            Från en matchning genom vänner till ett liv tillsammans är vi så tacksamma för allt vi fått uppleva och för allt som väntar. Under 2026 tar vi nästa steg och säger ja till varandra. Vi ser fram emot att fira starten på det nya kapitlet tillsammans med dig!
             </p>
-            
             {/* Timeline circles - responsive wrap */}
             <div className="flex flex-wrap justify-center gap-8">
               {[
@@ -63,7 +61,7 @@ export default function Home() {
                 { year: '2025', image: '/images/2025.JPEG' },
               ].map((item) => (
                 <div key={item.year} className="flex flex-col items-center w-48">
-                  <span className="font-script text-2xl text-gray-700 mb-2">{item.year}</span>
+                  <span className="font-script text-2xl text-black mb-2">{item.year}</span>
                   <img src={item.image} alt={item.year} className="w-full h-auto rounded-lg" />
                 </div>
               ))}
@@ -90,25 +88,27 @@ export default function Home() {
           >
             <div>
               <p className="font-semibold mb-1">Klädkod</p>
-              <p>Sommarfint. Välj gärna något ni känner er fina och bekväma i — det viktigaste för oss är att ni trivs och är redo för en dag fylld av kärlek och fest.</p>
+              <p>Sommarfin. Välj gärna något ni känner er fina och bekväma i — det viktigaste för oss är att ni trivs och är redo för en dag fylld av kärlek och fest.</p>
             </div>
             <div>
-              <p className="font-semibold mb-1">Paket</p>
-              <p>Er närvaro är den finaste presenten vi kan få ❤️. För er som ändå önskar uppmärksamma oss lite extra och vill ha lite inspiration kring vad brudparet önskar sig, är ni varmt välkomna att kontakta vår toastmadam.</p>
-              <p className="mt-1">Hon hjälper gärna till med tips och idéer.</p>
-              <p className="mt-1">📩 Kontakt: [toastmadams namn och kontaktuppgifter]</p>
+              <p className="font-semibold mb-1">Presenter</p>
+              <p>Er närvaro är den finaste presenten vi kan få.</p> 
+              
+                <p className="mt-1">För er som ändå önskar uppmärksamma oss lite extra och vill ha lite inspiration kring vad brudparet önskar sig, är ni varmt välkomna att kontakta vår toastmadam.</p>
+                <p className="mt-1">De hjälper gärna till med tips och idéer. </p>
+                <p className="mt-1">Kontakt: [toastmadams namn och kontaktuppgifter]</p>
             </div>
             <div>
-              <p className="font-semibold mb-1">Fråga till Toastmadame</p>
-              <p>Vill du hålla tal, göra ett spex eller bidra med något annat under middagen? Anmäl detta i god tid till vår toastmaster Axelia/Elise, så att allt kan planeras på bästa sätt.</p>
+              <p className="font-semibold mb-1">Frågor till Toastmadamer</p>
+              <p>Vill du hålla tal, göra ett spex eller bidra med något annat under middagen? Anmäl detta senast 10:e augusti, så att allt kan planeras på bästa sätt.</p>
               <p className="mt-1">Här kan du även vända dig med frågor, idéer eller önskemål kring möhippa/svensexa eller andra överraskningar inför bröllopet.</p>
-              <p className="mt-1">📩 Kontakt: [telefonnummer/e-post]</p>
+              <p className="mt-1">Kontakt: [telefonnummer/e-post]</p>
             </div>
           </InfoCard>
 
           {/* Box 2 - Under Bröllopet */}
           <InfoCard
-            title="Under Bröllopet"
+            title="Bröllopsdagen"
 
             bgColor="var(--pastel-green)"
             borderColor="var(--pastel-green-dark)"
@@ -116,18 +116,17 @@ export default function Home() {
           >
             <div>
               <p className="font-semibold mb-1">Transport</p>
-              <p>Efter vigseln tar vi oss vidare mot festlokalen. Transport sker via [t.ex. gemensam buss / egen bil / ?].</p>
+              <p>Efter vigseln tar vi oss vidare mot festlokalen. Transport sker med eget fordon, behöver du hjälp med transport ange det i OSA formuläret.</p>
               <p className="mt-1">Mer detaljer kring transporten kommer närmare bröllopsdagen.</p>
             </div>
             <div>
-              <p className="font-semibold mb-1">Hills Golfklubb</p>
-              <p>Bröllopsfesten hålls på Hills Golfklubb, där vi ser fram emot middag, tal, skratt och dans fram till 01:00.</p>
-              <p className="mt-1">📍 Adress: Hills Golfklubb, 437 40 Mölndal</p>
-              <p className="mt-1">🍽 Middag och fest följer efter ankomst</p>
+              <p className="font-semibold mb-1">Hills Golf and Sports Club</p>
+              <p>Bröllopsfesten hålls på Hills Golf and Sports Club, där vi ser fram emot middag, tal, skratt och dans fram till 01:00.</p>
+              <p className="mt-1">Adress: Hills väg 2, 431 51 Mölndal</p>
             </div>
             <div>
               <p className="font-semibold mb-1">Middag</p>
-              <p>Middagen består av förrätt, varmrätt och efterrätt. Vi bjuder på dryck till miglet, middagen och kaffet. Vi öppnar baren vid 22:00 med after work priser.</p>
+              <p>Middagen består av förrätt, varmrätt och efterrätt. Vi bjuder på dryck till minglet, middagen och kaffet. Vi öppnar baren vid 22:00 med after work priser.</p>
             </div>
           </InfoCard>
 
@@ -139,8 +138,8 @@ export default function Home() {
             borderColor="var(--pastel-pink-dark)"
             align="left"
           >
-            <p>Efter bröllopet kommer vi att samla och dela bilder från dagen. Mer information om hur ni får tillgång till dessa (t.ex. via länk eller digitalt galleri) kommer efter bröllopet.</p>
-            <p>Har ni själva tagit bilder eller filmer under dagen blir vi jätteglada om ni vill dela dem med oss 💕</p>
+            <p>Efter bröllopet kommer vi att samla och dela bilder från dagen. Mer information om hur ni får tillgång till dessa kommer efter bröllopet.</p>
+            <p>Har ni själva tagit bilder eller filmer under dagen blir vi jätteglada om ni vill dela dem med oss.</p>
           </InfoCard>
         </section>
 
@@ -159,8 +158,8 @@ export default function Home() {
                 return isOdd ? (
                   <div key={i} className={`relative flex items-center ${isLast ? '' : 'mb-20'}`}>
                     <div className="w-1/2 pr-8 text-right">
-                      <h3 className="font-script text-xl text-gray-800 mb-1">{item.title}</h3>
-                      <p className="text-gray-600 text-sm">{item.description}</p>
+                      <h3 className="font-script text-xl text-black mb-1">{item.title}</h3>
+                      <p className="text-black text-sm">{item.description}</p>
                     </div>
                     <div className="absolute left-1/2 flex items-center">
                       <div className="w-8 h-0.5 bg-black"></div>
@@ -188,8 +187,8 @@ export default function Home() {
                       )}
                     </div>
                     <div className="w-1/2 pl-8 text-left">
-                      <h3 className="font-script text-xl text-gray-800 mb-1">{item.title}</h3>
-                      <p className="text-gray-600 text-sm">{item.description}</p>
+                      <h3 className="font-script text-xl text-black mb-1">{item.title}</h3>
+                      <p className="text-black text-sm">{item.description}</p>
                     </div>
                   </div>
                 )
@@ -219,16 +218,16 @@ export default function Home() {
                     <div className="absolute bottom-full w-0.5 h-8 bg-black -translate-x-1/2" style={{ left: `${pos}%` }}></div>
                     {/* Text below */}
                     <div className="absolute top-full mt-4 -translate-x-1/2 text-center" style={{ left: `${pos}%` }}>
-                      <h3 className="font-script text-xl text-gray-800 mb-1">{item.title}</h3>
-                      <p className="text-gray-600 text-sm">{item.description}</p>
+                      <h3 className="font-script text-xl text-black mb-1">{item.title}</h3>
+                      <p className="text-black text-sm">{item.description}</p>
                     </div>
                   </div>
                 ) : (
                   <div key={i}>
                     {/* Text above */}
                     <div className="absolute -translate-x-1/2 bottom-full mb-4 text-center" style={{ left: `${pos}%` }}>
-                      <h3 className="font-script text-xl text-gray-800 mb-1">{item.title}</h3>
-                      <p className="text-gray-600 text-sm">{item.description}</p>
+                      <h3 className="font-script text-xl text-black mb-1">{item.title}</h3>
+                      <p className="text-black text-sm">{item.description}</p>
                     </div>
                     {/* Vertical line below */}
                     <div className="absolute top-0 w-0.5 h-8 bg-black -translate-x-1/2" style={{ left: `${pos}%` }}></div>
@@ -264,10 +263,10 @@ export default function Home() {
         {/* OSA / RSVP section */}
         <section id="osa" className="py-16 px-4" style={{ backgroundColor: 'var(--gul)' }}>
           <div className="max-w-md mx-auto">
-            <h2 className="font-script text-3xl sm:text-4xl text-gray-800 text-center mb-2">
+            <h2 className="font-script text-3xl sm:text-4xl text-black text-center mb-2">
               OSA
             </h2>
-            <p className="text-gray-600 text-center text-sm mb-10">
+            <p className="text-black text-center text-sm mb-10">
               Vi hoppas att ni vill fira med oss. Svara senast 1 juni.
             </p>
             <RsvpForm />
@@ -277,7 +276,7 @@ export default function Home() {
         {/* Countdown section */}
         <section className="py-16 px-4">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="font-script text-3xl sm:text-4xl text-gray-800 mb-8">
+            <h2 className="font-script text-3xl sm:text-4xl text-black mb-8">
               Tid kvar till bröllopet
             </h2>
             <Countdown />

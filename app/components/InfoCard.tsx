@@ -31,17 +31,17 @@ export function InfoCard({ title, children, bgColor, borderColor, align }: InfoC
         }}
       >
         <div className={`flex items-center justify-between ${!isLeft ? 'flex-row-reverse' : ''}`}>
-          <h3 className="font-script text-2xl text-gray-800">{title}</h3>
+          <h3 className="font-script text-2xl text-black">{title}</h3>
           <div className="flex items-center gap-2 bg-white/80 rounded-full px-3 py-1">
-            {!isOpen && <span className="text-gray-400 text-xs">klicka här</span>}
-            <span className={`text-gray-500 text-xs transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+            {!isOpen && <span className="text-black text-xs">klicka här</span>}
+            <span className={`text-black text-xs transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
               ▼
             </span>
           </div>
         </div>
 
         {isOpen && (
-          <div className="text-gray-600 text-sm space-y-4 mt-4">
+          <div className="text-black text-sm space-y-4 mt-4">
             {children}
           </div>
         )}

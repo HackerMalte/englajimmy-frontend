@@ -33,7 +33,7 @@ html {
 
 body {
   background-color: #ffffff;
-  color: var(--charcoal);
+  color: #000000;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

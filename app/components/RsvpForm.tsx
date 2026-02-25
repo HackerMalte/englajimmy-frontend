@@ -89,9 +89,9 @@ export function RsvpForm() {
 
   if (submitResult.submitted) {
     return (
-      <div className="text-center py-12 text-gray-800">
+      <div className="text-center py-12 text-black">
         <p className="font-script text-2xl mb-2">Tack!</p>
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="text-sm text-black mb-6">
           {submitResult.updated
             ? 'Din OSA har uppdaterats.'
             : 'Vi har fått din anmälan.'}
@@ -101,7 +101,7 @@ export function RsvpForm() {
             setSubmitResult({ submitted: false, updated: false })
             setHasAllergies(false)
           }}
-          className="text-sm font-medium text-gray-800 px-6 py-2 rounded hover:opacity-80 transition-colors"
+          className="text-sm font-medium text-black px-6 py-2 rounded hover:opacity-80 transition-colors"
           style={{ backgroundColor: 'var(--pastel-green)' }}
         >
           Skicka en till OSA
@@ -113,7 +113,7 @@ export function RsvpForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="name" className="block text-sm text-gray-700 mb-1.5">
+        <label htmlFor="name" className="block text-sm text-black mb-1.5">
           Namn
         </label>
         <input
@@ -122,13 +122,13 @@ export function RsvpForm() {
           type="text"
           required
           maxLength={255}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-800 placeholder-gray-400 rounded focus:outline-none focus:ring-1 focus:ring-[#B8D4E3] focus:border-[#B8D4E3]"
+          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-black placeholder-gray-400 rounded focus:outline-none focus:ring-1 focus:ring-[#B8D4E3] focus:border-[#B8D4E3]"
           placeholder="Anna Andersson"
         />
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm text-gray-700 mb-1.5">
+        <label htmlFor="email" className="block text-sm text-black mb-1.5">
           E-post
         </label>
         <input
@@ -136,13 +136,13 @@ export function RsvpForm() {
           name="email"
           type="email"
           required
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-800 placeholder-gray-400 rounded focus:outline-none focus:ring-1 focus:ring-[#B8D4E3] focus:border-[#B8D4E3]"
+          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-black placeholder-gray-400 rounded focus:outline-none focus:ring-1 focus:ring-[#B8D4E3] focus:border-[#B8D4E3]"
           placeholder="anna@example.com"
         />
       </div>
 
       <div>
-        <span className="block text-sm text-gray-700 mb-3">Kommer du?</span>
+        <span className="block text-sm text-black mb-3">Kommer du?</span>
         <div className="flex gap-6">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -152,7 +152,7 @@ export function RsvpForm() {
               defaultChecked
               className="w-4 h-4 border-gray-300 bg-gray-50 text-[#B8D4E3] focus:ring-[#B8D4E3]"
             />
-            <span className="text-gray-800">Ja</span>
+            <span className="text-black">Ja</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -161,13 +161,13 @@ export function RsvpForm() {
               value="no"
               className="w-4 h-4 border-gray-300 bg-gray-50 text-[#B8D4E3] focus:ring-[#B8D4E3]"
             />
-            <span className="text-gray-800">Nej</span>
+            <span className="text-black">Nej</span>
           </label>
         </div>
       </div>
 
       <div>
-        <span className="block text-sm text-gray-700 mb-3">Allergi eller matpreferenser?</span>
+        <span className="block text-sm text-black mb-3">Allergi eller matpreferenser?</span>
         <div className="flex gap-6">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -177,7 +177,7 @@ export function RsvpForm() {
               onChange={() => setHasAllergies(true)}
               className="w-4 h-4 border-gray-300 bg-gray-50 text-[#B8D4E3] focus:ring-[#B8D4E3]"
             />
-            <span className="text-gray-800">Ja</span>
+            <span className="text-black">Ja</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -188,7 +188,7 @@ export function RsvpForm() {
               onChange={() => setHasAllergies(false)}
               className="w-4 h-4 border-gray-300 bg-gray-50 text-[#B8D4E3] focus:ring-[#B8D4E3]"
             />
-            <span className="text-gray-800">Nej</span>
+            <span className="text-black">Nej</span>
           </label>
         </div>
         {hasAllergies && (
@@ -198,14 +198,14 @@ export function RsvpForm() {
             type="text"
             required
             maxLength={500}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-800 placeholder-gray-400 rounded focus:outline-none focus:ring-1 focus:ring-[#B8D4E3] focus:border-[#B8D4E3] mt-3"
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-black placeholder-gray-400 rounded focus:outline-none focus:ring-1 focus:ring-[#B8D4E3] focus:border-[#B8D4E3] mt-3"
             placeholder="T.ex. vegetarian, glutenfritt"
           />
         )}
       </div>
 
       <div>
-        <span className="block text-sm text-gray-700 mb-3">Behöver du hjälp med transport?</span>
+        <span className="block text-sm text-black mb-3">Behöver du hjälp med transport?</span>
         <div className="flex gap-6">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -214,7 +214,7 @@ export function RsvpForm() {
               value="yes"
               className="w-4 h-4 border-gray-300 bg-gray-50 text-[#B8D4E3] focus:ring-[#B8D4E3]"
             />
-            <span className="text-gray-800">Ja</span>
+            <span className="text-black">Ja</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -224,7 +224,7 @@ export function RsvpForm() {
               defaultChecked
               className="w-4 h-4 border-gray-300 bg-gray-50 text-[#B8D4E3] focus:ring-[#B8D4E3]"
             />
-            <span className="text-gray-800">Nej</span>
+            <span className="text-black">Nej</span>
           </label>
         </div>
       </div>
@@ -238,7 +238,7 @@ export function RsvpForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 mt-4 text-sm font-medium text-gray-800 rounded hover:opacity-80 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full py-3 mt-4 text-sm font-medium text-black rounded hover:opacity-80 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         style={{ backgroundColor: 'var(--pastel-green)' }}
       >
         {loading ? 'Skickar…' : 'Skicka'}

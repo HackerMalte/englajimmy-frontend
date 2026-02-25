@@ -51,20 +51,20 @@ export function Countdown() {
   return (
     <div className="flex justify-center gap-4 sm:gap-8">
       <div className="text-center">
-        <div className="text-3xl sm:text-5xl font-serif text-gray-800">{timeLeft.days}</div>
-        <div className="text-xs sm:text-sm text-gray-600 uppercase tracking-wide">Dagar</div>
+        <div className="text-3xl sm:text-5xl font-serif text-black">{timeLeft.days}</div>
+        <div className="text-xs sm:text-sm text-black uppercase tracking-wide">Dagar</div>
       </div>
       <div className="text-center">
-        <div className="text-3xl sm:text-5xl font-serif text-gray-800">{timeLeft.hours}</div>
-        <div className="text-xs sm:text-sm text-gray-600 uppercase tracking-wide">Timmar</div>
+        <div className="text-3xl sm:text-5xl font-serif text-black">{timeLeft.hours}</div>
+        <div className="text-xs sm:text-sm text-black uppercase tracking-wide">Timmar</div>
       </div>
       <div className="text-center">
-        <div className="text-3xl sm:text-5xl font-serif text-gray-800">{timeLeft.minutes}</div>
-        <div className="text-xs sm:text-sm text-gray-600 uppercase tracking-wide">Minuter</div>
+        <div className="text-3xl sm:text-5xl font-serif text-black">{timeLeft.minutes}</div>
+        <div className="text-xs sm:text-sm text-black uppercase tracking-wide">Minuter</div>
       </div>
       <div className="text-center">
-        <div className="text-3xl sm:text-5xl font-serif text-gray-800">{timeLeft.seconds}</div>
-        <div className="text-xs sm:text-sm text-gray-600 uppercase tracking-wide">Sekunder</div>
+        <div className="text-3xl sm:text-5xl font-serif text-black">{timeLeft.seconds}</div>
+        <div className="text-xs sm:text-sm text-black uppercase tracking-wide">Sekunder</div>
       </div>
     </div>
   )
