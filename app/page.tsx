@@ -108,9 +108,9 @@ export default function Home() {
                 <p>
                   <span className="underline">Elise Harrysson</span>
                   <br />
-                  0703-194044
+                  0706709440
                   <br />
-                  elise.bergkvist@gmail.com
+                  eliseharryson@gmail.com
                 </p>
                 <p>
                   <span className="underline">Axélia Hamrén</span>
