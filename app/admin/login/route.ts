@@ -6,14 +6,14 @@ export async function POST(request: Request) {
   const adminPassword = process.env.ADMIN_PASSWORD ?? ''
 
   if (!adminPassword) {
-    return NextResponse.redirect(new URL('/admin?error=2', request.url))
+    return NextResponse.redirect('/admin?error=2')
   }
 
   if (password !== adminPassword) {
-    return NextResponse.redirect(new URL('/admin?error=1', request.url))
+    return NextResponse.redirect('/admin?error=1')
   }
 
-  const response = NextResponse.redirect(new URL('/admin', request.url))
+  const response = NextResponse.redirect('/admin')
   response.cookies.set({
     name: 'admin_auth',
     value: '1',
