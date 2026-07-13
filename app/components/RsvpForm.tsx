@@ -6,6 +6,9 @@ const API_BASE =
   process.env.NEXT_PUBLIC_RSVP_API_URL ?? 'https://englajimmy-backend-production.up.railway.app'
 const API_KEY = process.env.NEXT_PUBLIC_RSVP_API_KEY ?? ''
 
+// Set to false to reopen the form
+const RSVP_CLOSED = true
+
 /** Matches RsvpCreate from API: name, email, coming, allergies?, transport_assist */
 type RsvpCreate = {
   name: string
@@ -85,6 +88,18 @@ export function RsvpForm() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (RSVP_CLOSED) {
+    return (
+      <div className="text-center py-12 text-black">
+        <p className="font-script text-2xl mb-2">OSA är stängd</p>
+        <p className="text-sm text-black">
+          Sista svarsdatum har passerat. Har du frågor eller behöver ändra något? Hör av dig till
+          oss direkt.
+        </p>
+      </div>
+    )
   }
 
   if (submitResult.submitted) {

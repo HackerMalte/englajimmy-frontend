@@ -310,7 +310,7 @@ export default function Home() {
               OSA
             </h2>
             <p className="text-black text-center text-sm mb-10">
-              Vi hoppas att du vill fira med oss. Svara senast 1 juni.
+              Tack alla som har svarat!
             </p>
             <RsvpForm />
           </div>
