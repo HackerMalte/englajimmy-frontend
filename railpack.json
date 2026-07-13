@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "steps": {
+    "install": {
+      "commands": ["NODE_OPTIONS= npm ci"]
+    },
+    "build": {
+      "commands": ["NODE_OPTIONS= npm run build"]
+    }
+  },
+  "deploy": {
+    "startCommand": "NODE_OPTIONS= npm run start"
+  }
+}
