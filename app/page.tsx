@@ -7,9 +7,9 @@ import { InfoCard } from './components/InfoCard'
 const timelineItems = [
   { title: 'Vigsel', description: '16:00', objectLabel: 'object 1', image: '/images/church_timeline.png' },
   { title: 'Hills', description: '17:30', objectLabel: 'object 2', image: '/images/mingel.png' },
-  { title: 'Middag', description: '18:30', objectLabel: 'object 3', image: '/images/middag.png' },
+  { title: 'Middag', description: '19:00', objectLabel: 'object 3', image: '/images/middag.png' },
   { title: 'Party', description: '22:00', objectLabel: 'object 4', image: '/images/party.png' },
-  { title: 'Natta käk', description: '23:30', objectLabel: 'object 5', image: '/images/sausage.jpg' },
+  { title: 'Natta käk', description: '00:00', objectLabel: 'object 5', image: '/images/sausage.jpg' },
 ]
 
 export default function Home() {
