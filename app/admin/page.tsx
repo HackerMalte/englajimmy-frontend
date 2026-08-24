@@ -30,7 +30,8 @@ async function getRsvps(): Promise<Rsvp[]> {
     process.env.NEXT_PUBLIC_RSVP_API_URL ??
     'https://englajimmy-backend-production.up.railway.app'
 
-  const apiKey = process.env.RSVP_API_KEY ?? process.env.NEXT_PUBLIC_RSVP_API_KEY ?? ''
+  // Server-side only: never fall back to a NEXT_PUBLIC_* value, which ships to the browser.
+  const apiKey = process.env.RSVP_API_KEY ?? ''
   const headers: HeadersInit = {}
   if (apiKey) headers['X-API-Key'] = apiKey
 
@@ -130,14 +131,22 @@ export default async function AdminPage({
               <h1 className="font-serif text-3xl text-black">Admin - OSA</h1>
               <p className="text-sm text-gray-600 mt-1">Gaster som svarat pa inbjudan.</p>
             </div>
-            <form action="/admin/logout" method="post">
-              <button
-                type="submit"
+            <div className="flex flex-wrap gap-2">
+              <a
+                href="/admin/bilder"
                 className="px-4 py-2 text-sm text-black rounded border border-gray-300 hover:bg-gray-50"
               >
-                Logga ut
-              </button>
-            </form>
+                Bilder
+              </a>
+              <form action="/admin/logout" method="post">
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm text-black rounded border border-gray-300 hover:bg-gray-50"
+                >
+                  Logga ut
+                </button>
+              </form>
+            </div>
           </div>
 
           {loadError ? (
