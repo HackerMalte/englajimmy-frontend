@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Header } from '../../components/Header'
+import { DownloadAllButton } from './DownloadAllButton'
 
 type Photo = {
   id: number
@@ -93,6 +94,16 @@ export default async function AdminPhotosPage({
               >
                 OSA-listan
               </a>
+              <DownloadAllButton
+                items={photos.map((photo) => ({
+                  id: photo.id,
+                  url: photo.url ?? null,
+                  uploader_name: photo.uploader_name,
+                  storage_key: photo.storage_key,
+                  size_bytes: photo.size_bytes,
+                  created_at: photo.created_at,
+                }))}
+              />
               <form action="/admin/bilder/cleanup" method="post">
                 <button
                   type="submit"
