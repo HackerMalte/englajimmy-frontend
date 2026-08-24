@@ -17,18 +17,24 @@ async function getGallery(): Promise<GalleryItem[]> {
     'https://englajimmy-backend-production.up.railway.app'
 
   const res = await fetch(`${apiBase}/photos/gallery?limit=500`, { cache: 'no-store' })
-  if (!res.ok) throw new Error(`Kunde inte hämta galleriet (${res.status})`)
+  if (!res.ok) {
+    // Keep the status in the server log where it is useful; guests should
+    // never be shown an HTTP code on a wedding site.
+    console.error(`[galleri] GET /photos/gallery failed: ${res.status}`)
+    throw new Error('gallery-unavailable')
+  }
   const data = await res.json()
   return Array.isArray(data) ? (data as GalleryItem[]) : []
 }
 
 export default async function GalleryPage() {
   let items: GalleryItem[] = []
-  let loadError: string | null = null
+  let failed = false
   try {
     items = await getGallery()
   } catch (err) {
-    loadError = err instanceof Error ? err.message : 'Något gick fel.'
+    console.error('[galleri] could not load gallery', err)
+    failed = true
   }
 
   return (
@@ -50,8 +56,14 @@ export default async function GalleryPage() {
             </Link>
           </div>
 
-          {loadError ? (
-            <p className="text-center text-sm text-gray-600">{loadError}</p>
+          {failed ? (
+            <div className="text-center py-20">
+              <p className="font-script text-3xl text-black mb-3">Galleriet är snart här</p>
+              <p className="text-sm text-gray-600 max-w-sm mx-auto">
+                Vi kunde inte hämta bilderna just nu. Prova igen om en liten stund — dina
+                uppladdade bilder är kvar.
+              </p>
+            </div>
           ) : (
             <GalleryGrid items={items} />
           )}
