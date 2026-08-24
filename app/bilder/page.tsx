@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Header } from '../components/Header'
 import { PhotoUploader } from '../components/PhotoUploader'
 
@@ -19,8 +20,18 @@ export default function PhotosPage() {
             Tog du bilder eller filmer under bröllopet? Vi vill så gärna se dem!
           </p>
           <p className="text-gray-600 text-center text-xs mb-10">
-            Bilderna går direkt till oss och visas inte för andra gäster här på sidan.
+            Det du laddar upp visas i galleriet här på sidan.
           </p>
+          <div className="text-center mb-10">
+            <Link
+              href="/galleri"
+              className="inline-block px-6 py-2.5 text-sm font-medium text-black rounded hover:opacity-80 transition-opacity"
+              style={{ backgroundColor: 'var(--gul)' }}
+            >
+              Visa galleriet
+            </Link>
+          </div>
+
           <PhotoUploader />
         </div>
       </main>
