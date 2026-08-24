@@ -247,6 +247,9 @@ export function PhotoUploader() {
   const [banner, setBanner] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const objectUrls = useRef<string[]>([])
+  // Mirrors items so a run in progress can notice files added after it started.
+  const itemsRef = useRef<Item[]>([])
+  itemsRef.current = items
 
   useEffect(() => {
     const saved = window.localStorage.getItem(NAME_STORAGE_KEY)
@@ -390,30 +393,47 @@ export function PhotoUploader() {
   }
 
   async function handleUpload() {
-    const pending = items.filter((item) => item.status === 'queued' || item.status === 'error')
-    if (!pending.length || busy) return
+    if (busy) return
+    if (!items.some((item) => item.status === 'queued' || item.status === 'error')) return
 
     setBusy(true)
     setBanner(null)
     const name = uploaderName.trim().slice(0, 255)
     if (name) window.localStorage.setItem(NAME_STORAGE_KEY, name)
 
+    // Every id this run has already taken responsibility for. Guards against
+    // retrying a persistent failure forever, while still letting the loop pick
+    // up files chosen after the run began — the button is disabled while
+    // uploading, so otherwise those would sit untouched until pressed again.
+    const attempted: Record<string, true> = {}
+
     try {
-      for (let start = 0; start < pending.length; start += BATCH_SIZE) {
-        const batch = pending.slice(start, start + BATCH_SIZE)
-        try {
-          // eslint-disable-next-line no-await-in-loop -- sequential batches keep phone memory low
-          await uploadBatch(batch, name)
-        } catch (error) {
-          // Anything thrown before the per-file uploads start — a refused or
-          // timed-out request for upload URLs, most likely — would otherwise
-          // leave the whole batch sitting in a pre-upload state with nothing
-          // shown to the guest. Mark it failed so the retry button appears.
-          const message =
-            error instanceof DOMException && error.name === 'AbortError'
-              ? 'Servern svarade inte i tid. Försök igen.'
-              : 'Kunde inte nå servern. Kontrollera nätverket och försök igen.'
-          batch.forEach((item) => patchItem(item.id, { status: 'error', error: message }))
+      for (;;) {
+        const pending = itemsRef.current.filter(
+          (item) =>
+            (item.status === 'queued' || item.status === 'error') && !attempted[item.id]
+        )
+        if (pending.length === 0) break
+        pending.forEach((item) => {
+          attempted[item.id] = true
+        })
+
+        for (let start = 0; start < pending.length; start += BATCH_SIZE) {
+          const batch = pending.slice(start, start + BATCH_SIZE)
+          try {
+            // eslint-disable-next-line no-await-in-loop -- sequential batches keep phone memory low
+            await uploadBatch(batch, name)
+          } catch (error) {
+            // Anything thrown before the per-file uploads start — a refused or
+            // timed-out request for upload URLs, most likely — would otherwise
+            // leave the whole batch sitting in a pre-upload state with nothing
+            // shown to the guest. Mark it failed so the retry button appears.
+            const message =
+              error instanceof DOMException && error.name === 'AbortError'
+                ? 'Servern svarade inte i tid. Försök igen.'
+                : 'Kunde inte nå servern. Kontrollera nätverket och försök igen.'
+            batch.forEach((item) => patchItem(item.id, { status: 'error', error: message }))
+          }
         }
       }
     } finally {
@@ -431,6 +451,14 @@ export function PhotoUploader() {
 
   const doneCount = items.filter((item) => item.status === 'done').length
   const errorCount = items.filter((item) => item.status === 'error').length
+  // When every failure has the same cause — a rate limit, a dropped
+  // connection — say it once instead of repeating it under every file.
+  // Written without Set iteration, which needs an ES2015 target this project
+  // does not set.
+  const failed = items.filter((item) => item.status === 'error')
+  const firstReason = failed.length > 0 ? failed[0].error : null
+  const sharedError =
+    firstReason && failed.every((item) => item.error === firstReason) ? firstReason : null
   const pendingCount = items.filter(
     (item) => item.status === 'queued' || item.status === 'error'
   ).length
@@ -522,8 +550,11 @@ export function PhotoUploader() {
                     />
                   </div>
                 )}
-                {item.status === 'error' && (
+                {item.status === 'error' && !sharedError && (
                   <p className="text-xs text-red-600">{item.error}</p>
+                )}
+                {item.status === 'error' && sharedError && (
+                  <p className="text-xs text-red-600">Misslyckades</p>
                 )}
               </div>
               <span aria-hidden className="text-lg">
@@ -535,7 +566,13 @@ export function PhotoUploader() {
       )}
 
       {items.length > 0 && (
-        <div className="space-y-3">
+        <div className="sticky bottom-0 space-y-3 border-t border-gray-200 bg-white/95 py-3 backdrop-blur-sm">
+          {errorCount > 0 && (
+            <p className="text-center text-xs text-red-600" role="alert">
+              {errorCount} av {items.length} misslyckades
+              {sharedError ? `: ${sharedError}` : ''}
+            </p>
+          )}
           <button
             type="button"
             onClick={handleUpload}
