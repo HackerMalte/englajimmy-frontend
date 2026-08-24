@@ -24,13 +24,30 @@ const MAX_VIDEO_BYTES = 200 * 1024 * 1024
 const MAX_IMAGE_DIMENSION = 2560
 const JPEG_QUALITY = 0.85
 
+/**
+ * Formats that carry animation. These bypass the canvas entirely:
+ * createImageBitmap decodes only the first frame, so re-encoding would
+ * silently throw the animation away.
+ */
+const PASSTHROUGH_IMAGE_TYPES = ['image/gif', 'image/webp']
+
+/**
+ * Ceiling on decoding one image. Some browsers never settle the promise for
+ * certain animated files, and an unbounded await leaves the file sitting at
+ * "förbereder…" forever with no error to show.
+ */
+const DECODE_TIMEOUT_MS = 15_000
+
+/** Ceiling on our own API calls, so a stalled request cannot wedge the queue. */
+const REQUEST_TIMEOUT_MS = 30_000
+
 /** How many files travel together. Small batches keep memory and progress sane on phones. */
 const BATCH_SIZE = 4
 const MAX_FILES_PER_BATCH_REQUEST = 30
 
 const NAME_STORAGE_KEY = 'englajimmy_uploader_name'
 
-type ItemStatus = 'queued' | 'processing' | 'uploading' | 'done' | 'error'
+type ItemStatus = 'queued' | 'processing' | 'waiting' | 'uploading' | 'done' | 'error'
 
 type Item = {
   id: string
@@ -43,6 +60,32 @@ type Item = {
 }
 
 type UploadTarget = { key: string; url: string; fields: Record<string, string> }
+
+/** Resolve with `fallback` if the promise has not settled in time, instead of hanging. */
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    let settled = false
+    const finish = (value: T) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      resolve(value)
+    }
+    const timer = setTimeout(() => finish(fallback), ms)
+    promise.then(finish, () => finish(fallback))
+  })
+}
+
+/** fetch with an abort-based deadline. */
+async function fetchWithTimeout(url: string, init: RequestInit = {}) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  try {
+    return await fetch(url, { ...init, signal: controller.signal })
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 function isVideoType(type: string) {
   return ALLOWED_VIDEO_TYPES.includes(type)
@@ -98,15 +141,28 @@ async function downscaleImage(
   file: File
 ): Promise<{ blob: Blob; type: string; width?: number; height?: number }> {
   const originalType = resolveType(file)
+  const untouched = { blob: file as Blob, type: originalType }
+
+  // Animated formats keep their frames: sending the original beats sending a
+  // still frame of it.
+  if (PASSTHROUGH_IMAGE_TYPES.includes(originalType)) return untouched
+
   try {
-    const bitmap = await createImageBitmap(file)
+    // A decode that never settles must not strand the file. If we give up, the
+    // original is uploaded as-is — unshrunk beats lost.
+    const decoding = createImageBitmap(file)
+    const bitmap = await withTimeout<ImageBitmap | null>(decoding, DECODE_TIMEOUT_MS, null)
+    if (!bitmap) {
+      decoding.then((late) => late.close()).catch(() => {})
+      return untouched
+    }
     const { width, height } = bitmap
     const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(width, height))
 
     // Already small and already a web-friendly format: send it untouched.
     if (scale === 1 && originalType !== 'image/heic' && originalType !== 'image/heif') {
       bitmap.close()
-      return { blob: file, type: originalType, width, height }
+      return { ...untouched, width, height }
     }
 
     const targetWidth = Math.round(width * scale)
@@ -125,7 +181,7 @@ async function downscaleImage(
     if (!blob) throw new Error('toBlob failed')
     return { blob, type: 'image/jpeg', width: targetWidth, height: targetHeight }
   } catch {
-    return { blob: file, type: originalType }
+    return untouched
   }
 }
 
@@ -148,6 +204,8 @@ async function readVideoMetadata(
         duration: Number.isFinite(video.duration) ? video.duration : undefined,
       })
     video.onerror = () => done({})
+    // Some containers never fire either event; do not wait forever.
+    setTimeout(() => done({}), DECODE_TIMEOUT_MS)
     video.src = url
   })
 }
@@ -266,7 +324,9 @@ export function PhotoUploader() {
       })
     )
 
-    const response = await fetch(`${API_BASE}/photos/upload-urls`, {
+    prepared.forEach((entry) => patchItem(entry.item.id, { status: 'waiting' }))
+
+    const response = await fetchWithTimeout(`${API_BASE}/photos/upload-urls`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -298,7 +358,7 @@ export function PhotoUploader() {
             patchItem(entry.item.id, { progress: fraction })
           )
 
-          const record = await fetch(`${API_BASE}/photos`, {
+          const record = await fetchWithTimeout(`${API_BASE}/photos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -340,8 +400,20 @@ export function PhotoUploader() {
     try {
       for (let start = 0; start < pending.length; start += BATCH_SIZE) {
         const batch = pending.slice(start, start + BATCH_SIZE)
-        // eslint-disable-next-line no-await-in-loop -- sequential batches keep phone memory low
-        await uploadBatch(batch, name)
+        try {
+          // eslint-disable-next-line no-await-in-loop -- sequential batches keep phone memory low
+          await uploadBatch(batch, name)
+        } catch (error) {
+          // Anything thrown before the per-file uploads start — a refused or
+          // timed-out request for upload URLs, most likely — would otherwise
+          // leave the whole batch sitting in a pre-upload state with nothing
+          // shown to the guest. Mark it failed so the retry button appears.
+          const message =
+            error instanceof DOMException && error.name === 'AbortError'
+              ? 'Servern svarade inte i tid. Försök igen.'
+              : 'Kunde inte nå servern. Kontrollera nätverket och försök igen.'
+          batch.forEach((item) => patchItem(item.id, { status: 'error', error: message }))
+        }
       }
     } finally {
       setBusy(false)
@@ -434,6 +506,7 @@ export function PhotoUploader() {
                 <p className="text-xs text-gray-500">
                   {formatBytes(item.file.size)}
                   {item.status === 'processing' && ' · förbereder…'}
+                  {item.status === 'waiting' && ' · kontaktar servern…'}
                   {item.status === 'uploading' && ` · ${Math.round(item.progress * 100)} %`}
                   {item.status === 'done' && ' · klar'}
                 </p>
