@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 const API_BASE =
@@ -568,11 +569,24 @@ export function PhotoUploader() {
         </div>
       )}
 
-      {totalCount !== null && (
-        <p className="text-center text-xs text-gray-500">
-          {totalCount} bilder och filmer har delats så här långt
-        </p>
-      )}
+      {/* The way into the gallery sits with the counter — both answer "what
+          happened to everyone's photos?". Yellow rather than green so it does
+          not compete with the upload button for attention. The button renders
+          even when the count fails to load. */}
+      <div className="flex flex-col items-center gap-3 pt-2">
+        <Link
+          href="/galleri"
+          className="inline-block px-7 py-3 text-sm font-medium text-black rounded hover:opacity-80 transition-opacity"
+          style={{ backgroundColor: 'var(--gul)' }}
+        >
+          Visa galleriet
+        </Link>
+        {totalCount !== null && (
+          <p className="text-xs text-gray-500">
+            {totalCount} bilder och filmer delade
+          </p>
+        )}
+      </div>
     </div>
   )
 }
