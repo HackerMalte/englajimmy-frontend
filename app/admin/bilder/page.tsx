@@ -2,6 +2,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Header } from '../../components/Header'
 import { DownloadAllButton } from './DownloadAllButton'
+import { SaveFileButton } from './SaveFileButton'
 
 type Photo = {
   id: number
@@ -198,13 +199,12 @@ export default async function AdminPhotosPage({
                         {photo.caption && <p className="text-black italic">{photo.caption}</p>}
                       </div>
                       <div className="flex items-center justify-between border-t border-gray-100 px-3 py-2">
-                        <a
-                          href={photo.url ?? '#'}
-                          download
-                          className="text-xs text-black underline hover:opacity-70"
-                        >
-                          Ladda ner
-                        </a>
+                        <SaveFileButton
+                          id={photo.id}
+                          url={photo.url ?? ''}
+                          contentType={photo.content_type}
+                          uploaderName={photo.uploader_name}
+                        />
                         <form action="/admin/bilder/delete" method="post">
                           <input type="hidden" name="id" value={photo.id} />
                           <button
