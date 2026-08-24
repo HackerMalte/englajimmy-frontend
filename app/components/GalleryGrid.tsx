@@ -14,8 +14,73 @@ type GalleryGridProps = {
   items: GalleryItem[]
 }
 
+const EXTENSION_BY_TYPE: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'image/avif': 'avif',
+  'image/heic': 'heic',
+  'image/heif': 'heif',
+  'video/mp4': 'mp4',
+  'video/quicktime': 'mov',
+  'video/webm': 'webm',
+}
+
 function isVideo(item: GalleryItem) {
   return item.content_type.startsWith('video/')
+}
+
+function extensionFor(item: GalleryItem): string {
+  const known = EXTENSION_BY_TYPE[item.content_type]
+  if (known) return known
+  // Fall back to the extension in the storage key, which the URL still carries.
+  const fromUrl = item.url.split('?')[0].split('.').pop()
+  return fromUrl && fromUrl.length <= 5 ? fromUrl : 'jpg'
+}
+
+/**
+ * Save one file to the visitor's device.
+ *
+ * The blob is fetched first rather than relying on <a download href>: that
+ * attribute is ignored for cross-origin URLs, so pointing it straight at the
+ * bucket would open the image instead of saving it. The bucket allows
+ * cross-origin reads, so fetching and saving an object URL works everywhere.
+ *
+ * The filename is deliberately anonymous — the public payload carries no
+ * uploader name or timestamp, and it should stay that way.
+ */
+async function saveItem(item: GalleryItem): Promise<void> {
+  const response = await fetch(item.url)
+  if (!response.ok) throw new Error(`Kunde inte hämta filen (${response.status})`)
+  const blob = await response.blob()
+  const href = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = href
+  link.download = `englajimmy-${String(item.id).padStart(3, '0')}.${extensionFor(item)}`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(href), 30_000)
+}
+
+function DownloadIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={className}
+    >
+      <path d="M12 3v12" />
+      <path d="m7 11 5 5 5-5" />
+      <path d="M5 21h14" />
+    </svg>
+  )
 }
 
 /**
@@ -28,6 +93,8 @@ function isVideo(item: GalleryItem) {
  */
 export function GalleryGrid({ items }: GalleryGridProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [savingId, setSavingId] = useState<number | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const close = useCallback(() => setOpenIndex(null), [])
   const step = useCallback(
@@ -38,6 +105,18 @@ export function GalleryGrid({ items }: GalleryGridProps) {
       }),
     [items.length]
   )
+
+  const save = useCallback(async (item: GalleryItem) => {
+    setSaveError(null)
+    setSavingId(item.id)
+    try {
+      await saveItem(item)
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Kunde inte spara filen.')
+    } finally {
+      setSavingId(null)
+    }
+  }, [])
 
   // Keyboard control while the lightbox is open, and prevent the page behind
   // it from scrolling.
@@ -74,15 +153,19 @@ export function GalleryGrid({ items }: GalleryGridProps) {
 
   return (
     <>
+      {saveError && (
+        <p className="mb-4 text-center text-sm text-red-600" role="alert">
+          {saveError}
+        </p>
+      )}
+
       <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4 [column-fill:_balance]">
         {items.map((item, index) => (
-          <button
+          // Open and download are siblings rather than nested buttons, which
+          // would be invalid markup and unreachable by keyboard.
+          <div
             key={item.id}
-            type="button"
-            onClick={() => setOpenIndex(index)}
-            aria-label={`Öppna bild ${index + 1} av ${items.length}`}
-            className="group mb-3 sm:mb-4 block w-full overflow-hidden rounded-lg bg-gray-100 break-inside-avoid focus:outline-none focus:ring-2 focus:ring-offset-2"
-            style={{ ['--tw-ring-color' as string]: 'var(--pastel-green-dark)' }}
+            className="group relative mb-3 sm:mb-4 overflow-hidden rounded-lg bg-gray-100 break-inside-avoid"
           >
             <div
               className="relative w-full"
@@ -101,10 +184,7 @@ export function GalleryGrid({ items }: GalleryGridProps) {
                     playsInline
                     className="absolute inset-0 h-full w-full object-cover"
                   />
-                  <span
-                    aria-hidden
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
+                  <span aria-hidden className="absolute inset-0 flex items-center justify-center">
                     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 text-black shadow-sm transition group-hover:bg-white">
                       ▶
                     </span>
@@ -121,7 +201,33 @@ export function GalleryGrid({ items }: GalleryGridProps) {
                 />
               )}
             </div>
-          </button>
+
+            <button
+              type="button"
+              onClick={() => setOpenIndex(index)}
+              aria-label={`Öppna bild ${index + 1} av ${items.length}`}
+              className="absolute inset-0 focus:outline-none focus:ring-2 focus:ring-inset"
+              style={{ ['--tw-ring-color' as string]: 'var(--pastel-green-dark)' }}
+            />
+
+            {/* Always visible rather than hover-only: most guests are on a
+                phone, where there is no hover state to reveal it. */}
+            <button
+              type="button"
+              onClick={() => save(item)}
+              disabled={savingId === item.id}
+              aria-label="Spara den här bilden"
+              title="Spara"
+              className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/75 text-black shadow-sm backdrop-blur-sm transition hover:bg-white disabled:opacity-60 focus:outline-none focus:ring-2"
+              style={{ ['--tw-ring-color' as string]: 'var(--pastel-green-dark)' }}
+            >
+              {savingId === item.id ? (
+                <span className="text-[10px] font-medium">…</span>
+              ) : (
+                <DownloadIcon className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         ))}
       </div>
 
@@ -133,14 +239,33 @@ export function GalleryGrid({ items }: GalleryGridProps) {
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 sm:p-8 backdrop-blur-sm"
           onClick={close}
         >
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Stäng"
-            className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-2xl leading-none text-white transition hover:bg-white/20"
-          >
-            ×
-          </button>
+          <div className="absolute right-4 top-4 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation()
+                save(open)
+              }}
+              disabled={savingId === open.id}
+              aria-label="Spara den här bilden"
+              title="Spara"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-60"
+            >
+              {savingId === open.id ? (
+                <span className="text-xs">…</span>
+              ) : (
+                <DownloadIcon className="h-5 w-5" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Stäng"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-2xl leading-none text-white transition hover:bg-white/20"
+            >
+              ×
+            </button>
+          </div>
 
           {items.length > 1 && (
             <>
@@ -169,10 +294,7 @@ export function GalleryGrid({ items }: GalleryGridProps) {
             </>
           )}
 
-          <div
-            className="max-h-full max-w-5xl"
-            onClick={(event) => event.stopPropagation()}
-          >
+          <div className="max-h-full max-w-5xl" onClick={(event) => event.stopPropagation()}>
             {isVideo(open) ? (
               // eslint-disable-next-line jsx-a11y/media-has-caption -- guest clips have no captions
               <video
