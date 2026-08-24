@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
+import { extensionFor, saveMedia } from '../lib/saveMedia'
+
 export type GalleryItem = {
   id: number
   url: string
@@ -14,54 +16,8 @@ type GalleryGridProps = {
   items: GalleryItem[]
 }
 
-const EXTENSION_BY_TYPE: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/gif': 'gif',
-  'image/avif': 'avif',
-  'image/heic': 'heic',
-  'image/heif': 'heif',
-  'video/mp4': 'mp4',
-  'video/quicktime': 'mov',
-  'video/webm': 'webm',
-}
-
 function isVideo(item: GalleryItem) {
   return item.content_type.startsWith('video/')
-}
-
-function extensionFor(item: GalleryItem): string {
-  const known = EXTENSION_BY_TYPE[item.content_type]
-  if (known) return known
-  // Fall back to the extension in the storage key, which the URL still carries.
-  const fromUrl = item.url.split('?')[0].split('.').pop()
-  return fromUrl && fromUrl.length <= 5 ? fromUrl : 'jpg'
-}
-
-/**
- * Save one file to the visitor's device.
- *
- * The blob is fetched first rather than relying on <a download href>: that
- * attribute is ignored for cross-origin URLs, so pointing it straight at the
- * bucket would open the image instead of saving it. The bucket allows
- * cross-origin reads, so fetching and saving an object URL works everywhere.
- *
- * The filename is deliberately anonymous — the public payload carries no
- * uploader name or timestamp, and it should stay that way.
- */
-async function saveItem(item: GalleryItem): Promise<void> {
-  const response = await fetch(item.url)
-  if (!response.ok) throw new Error(`Kunde inte hämta filen (${response.status})`)
-  const blob = await response.blob()
-  const href = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = href
-  link.download = `englajimmy-${String(item.id).padStart(3, '0')}.${extensionFor(item)}`
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  setTimeout(() => URL.revokeObjectURL(href), 30_000)
 }
 
 function DownloadIcon({ className = '' }: { className?: string }) {
@@ -110,7 +66,13 @@ export function GalleryGrid({ items }: GalleryGridProps) {
     setSaveError(null)
     setSavingId(item.id)
     try {
-      await saveItem(item)
+      // Filenames stay anonymous on purpose: the public payload carries no
+      // uploader name or timestamp, and this should not reintroduce one.
+      const filename = `englajimmy-${String(item.id).padStart(3, '0')}.${extensionFor(
+        item.url,
+        item.content_type
+      )}`
+      await saveMedia(item.url, filename, item.content_type)
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'Kunde inte spara filen.')
     } finally {
