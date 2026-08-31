@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { GALLERY_PAGE_SIZE } from '../lib/gallery'
 import { extensionFor, saveMedia } from '../lib/saveMedia'
@@ -47,6 +47,79 @@ function DownloadIcon({ className = '' }: { className?: string }) {
   )
 }
 
+type PlacedItem = { item: GalleryItem; index: number }
+
+/**
+ * Column count, from the same breakpoints the CSS-column version used, so the
+ * layout still changes at 640px and 1024px.
+ *
+ * matchMedia rather than a ResizeObserver or a window resize listener: it
+ * reports synchronously on mount and fires reliably on change, including
+ * orientation changes, without depending on a resize event arriving.
+ *
+ * Starts at 2 so the server render and the first client render agree; wider
+ * layouts correct themselves immediately after mount.
+ */
+function useColumnCount(): number {
+  const [columns, setColumns] = useState(2)
+
+  useEffect(() => {
+    const threeColumns = window.matchMedia('(min-width: 640px)')
+    const fourColumns = window.matchMedia('(min-width: 1024px)')
+
+    const update = () => setColumns(fourColumns.matches ? 4 : threeColumns.matches ? 3 : 2)
+    update()
+
+    threeColumns.addEventListener('change', update)
+    fourColumns.addEventListener('change', update)
+    // Belt and braces. update() re-reads the queries and setting the same value
+    // is a no-op in React, so a second source of truth costs nothing and covers
+    // a browser where one of the two misbehaves.
+    window.addEventListener('resize', update)
+    window.addEventListener('orientationchange', update)
+
+    return () => {
+      threeColumns.removeEventListener('change', update)
+      fourColumns.removeEventListener('change', update)
+      window.removeEventListener('resize', update)
+      window.removeEventListener('orientationchange', update)
+    }
+  }, [])
+
+  return columns
+}
+
+/**
+ * Distribute items into fixed columns, each one going to whichever column is
+ * currently shortest.
+ *
+ * The point is stability on append. Placement of the first N items depends only
+ * on those N items, so loading another page can never move a photo that is
+ * already on screen. CSS multi-column cannot promise that: it rebalances the
+ * whole set whenever content changes, which moved 19 of 25 tiles between
+ * columns as soon as the second page arrived.
+ *
+ * Heights are estimated from the stored dimensions. Columns are equal width, so
+ * relative height is simply height/width; a photo with unknown dimensions is
+ * assumed 4:5, matching the tile placeholder.
+ */
+function packIntoColumns(items: GalleryItem[], columnCount: number): PlacedItem[][] {
+  const columns: PlacedItem[][] = Array.from({ length: columnCount }, () => [])
+  const heights = new Array<number>(columnCount).fill(0)
+
+  items.forEach((item, index) => {
+    const ratio = item.width && item.height ? item.height / item.width : 5 / 4
+    let target = 0
+    for (let column = 1; column < columnCount; column += 1) {
+      if (heights[column] < heights[target]) target = column
+    }
+    columns[target].push({ item, index })
+    heights[target] += ratio
+  })
+
+  return columns
+}
+
 /**
  * Masonry-style gallery with a lightbox.
  *
@@ -69,6 +142,8 @@ export function GalleryGrid({ initialItems, total }: GalleryGridProps) {
   stateRef.current = { count: items.length, loading: loadingMore, failed: loadError }
 
   const hasMore = items.length < total
+  const columnCount = useColumnCount()
+  const columns = useMemo(() => packIntoColumns(items, columnCount), [items, columnCount])
 
   const loadMore = useCallback(async () => {
     if (stateRef.current.loading) return
@@ -193,13 +268,17 @@ export function GalleryGrid({ initialItems, total }: GalleryGridProps) {
         </p>
       )}
 
-      <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 sm:gap-4 [column-fill:_balance]">
-        {items.map((item, index) => (
+      {/* Explicit columns rather than CSS multi-column: appending a page must
+          never re-flow photos that are already on screen. */}
+      <div className="flex items-start gap-3 sm:gap-4">
+        {columns.map((column, columnIndex) => (
+          <div key={columnIndex} className="flex-1 min-w-0 space-y-3 sm:space-y-4">
+            {column.map(({ item, index }) => (
           // Open and download are siblings rather than nested buttons, which
           // would be invalid markup and unreachable by keyboard.
           <div
             key={item.id}
-            className="group relative mb-3 sm:mb-4 overflow-hidden rounded-lg bg-gray-100 break-inside-avoid"
+            className="group relative overflow-hidden rounded-lg bg-gray-100"
           >
             <div
               className="relative w-full"
@@ -274,6 +353,8 @@ export function GalleryGrid({ initialItems, total }: GalleryGridProps) {
                 <DownloadIcon className="h-4 w-4" />
               )}
             </button>
+          </div>
+            ))}
           </div>
         ))}
       </div>
