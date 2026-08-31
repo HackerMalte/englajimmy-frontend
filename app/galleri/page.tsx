@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Header } from '../components/Header'
 import { GalleryGrid, type GalleryItem } from '../components/GalleryGrid'
+import { GALLERY_PAGE_SIZE } from '../lib/gallery'
 
 export const metadata = {
   title: 'Galleriet · Engla & Jimmy',
@@ -10,28 +11,52 @@ export const metadata = {
 // Presigned URLs expire, so never serve this from a cache.
 export const dynamic = 'force-dynamic'
 
-async function getGallery(): Promise<GalleryItem[]> {
+/**
+ * First page only. The rest arrives as the visitor scrolls, so a gallery that
+ * keeps growing does not turn into an ever-heavier first paint.
+ */
+async function getFirstPage(): Promise<{ items: GalleryItem[]; total: number }> {
   const apiBase =
     process.env.RSVP_API_URL ??
     process.env.NEXT_PUBLIC_RSVP_API_URL ??
     'https://englajimmy-backend-production.up.railway.app'
 
-  const res = await fetch(`${apiBase}/photos/gallery?limit=500`, { cache: 'no-store' })
-  if (!res.ok) {
+  const [galleryRes, countRes] = await Promise.all([
+    fetch(`${apiBase}/photos/gallery?limit=${GALLERY_PAGE_SIZE}`, { cache: 'no-store' }),
+    fetch(`${apiBase}/photos/count`, { cache: 'no-store' }),
+  ])
+
+  if (!galleryRes.ok) {
     // Keep the status in the server log where it is useful; guests should
     // never be shown an HTTP code on a wedding site.
-    console.error(`[galleri] GET /photos/gallery failed: ${res.status}`)
+    console.error(`[galleri] GET /photos/gallery failed: ${galleryRes.status}`)
     throw new Error('gallery-unavailable')
   }
-  const data = await res.json()
-  return Array.isArray(data) ? (data as GalleryItem[]) : []
+
+  const data = await galleryRes.json()
+  const items = Array.isArray(data) ? (data as GalleryItem[]) : []
+
+  // A missing count is not worth failing the page over: fall back to what we
+  // have, which simply means no further pages are offered.
+  let total = items.length
+  if (countRes.ok) {
+    const counted = await countRes.json().catch(() => null)
+    if (typeof counted?.count === 'number') total = counted.count
+  } else {
+    console.error(`[galleri] GET /photos/count failed: ${countRes.status}`)
+  }
+
+  return { items, total }
 }
 
 export default async function GalleryPage() {
   let items: GalleryItem[] = []
+  let total = 0
   let failed = false
   try {
-    items = await getGallery()
+    const firstPage = await getFirstPage()
+    items = firstPage.items
+    total = firstPage.total
   } catch (err) {
     console.error('[galleri] could not load gallery', err)
     failed = true
@@ -65,7 +90,7 @@ export default async function GalleryPage() {
               </p>
             </div>
           ) : (
-            <GalleryGrid items={items} />
+            <GalleryGrid initialItems={items} total={total} />
           )}
         </div>
       </main>
