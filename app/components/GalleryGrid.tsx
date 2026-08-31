@@ -1,8 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { GALLERY_PAGE_SIZE } from '../lib/gallery'
 import { extensionFor, saveMedia } from '../lib/saveMedia'
+
+const API_BASE =
+  process.env.NEXT_PUBLIC_RSVP_API_URL ?? 'https://englajimmy-backend-production.up.railway.app'
 
 export type GalleryItem = {
   id: number
@@ -14,7 +18,10 @@ export type GalleryItem = {
 }
 
 type GalleryGridProps = {
-  items: GalleryItem[]
+  /** First page, rendered on the server so there is something to see immediately. */
+  initialItems: GalleryItem[]
+  /** How many exist in total, so we know when to stop asking for more. */
+  total: number
 }
 
 function isVideo(item: GalleryItem) {
@@ -48,19 +55,83 @@ function DownloadIcon({ className = '' }: { className?: string }) {
  * images arrive. Each tile reserves its aspect ratio up front for the same
  * reason.
  */
-export function GalleryGrid({ items }: GalleryGridProps) {
+export function GalleryGrid({ initialItems, total }: GalleryGridProps) {
+  const [items, setItems] = useState<GalleryItem[]>(initialItems)
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const [savingId, setSavingId] = useState<number | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  // Read inside the observer callback, which would otherwise close over stale
+  // values and fire the same page request repeatedly.
+  const stateRef = useRef({ count: initialItems.length, loading: false, failed: false })
+  stateRef.current = { count: items.length, loading: loadingMore, failed: loadError }
+
+  const hasMore = items.length < total
+
+  const loadMore = useCallback(async () => {
+    if (stateRef.current.loading) return
+    setLoadingMore(true)
+    setLoadError(false)
+    try {
+      const offset = stateRef.current.count
+      const res = await fetch(
+        `${API_BASE}/photos/gallery?limit=${GALLERY_PAGE_SIZE}&offset=${offset}`,
+        { cache: 'no-store' }
+      )
+      if (!res.ok) throw new Error(String(res.status))
+      const page = (await res.json()) as GalleryItem[]
+      setItems((current) => {
+        // Someone uploading while a guest scrolls shifts the offsets, so merge
+        // on id rather than trusting the window to line up.
+        const seen = new Set(current.map((item) => item.id))
+        return [...current, ...page.filter((item) => !seen.has(item.id))]
+      })
+    } catch {
+      setLoadError(true)
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [])
+
+  // Auto-load as the bottom of the grid comes into view. The button below is
+  // kept for keyboard users and for when this fails.
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel || !hasMore) return
+    if (typeof IntersectionObserver === 'undefined') return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return
+        // Do not retry automatically after a failure: that would hammer a
+        // struggling API while the visitor sits at the bottom of the page.
+        if (stateRef.current.loading || stateRef.current.failed) return
+        void loadMore()
+      },
+      // Start fetching before the visitor actually reaches the end.
+      { rootMargin: '600px' }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, loadMore, items.length])
 
   const close = useCallback(() => setOpenIndex(null), [])
   const step = useCallback(
     (delta: number) =>
       setOpenIndex((current) => {
         if (current === null) return current
+        // Reaching the end of what is loaded pulls the next page in rather than
+        // jumping back to the first photo, so arrow-key browsing feels
+        // continuous while more remains.
+        if (delta > 0 && current === items.length - 1 && items.length < total) {
+          void loadMore()
+          return current
+        }
         return (current + delta + items.length) % items.length
       }),
-    [items.length]
+    [items.length, total, loadMore]
   )
 
   const save = useCallback(async (item: GalleryItem) => {
@@ -101,7 +172,7 @@ export function GalleryGrid({ items }: GalleryGridProps) {
     }
   }, [openIndex, close, step])
 
-  if (items.length === 0) {
+  if (items.length === 0 && total === 0) {
     return (
       <div className="text-center py-20">
         <p className="font-script text-3xl text-black mb-3">Inga bilder än</p>
@@ -206,6 +277,43 @@ export function GalleryGrid({ items }: GalleryGridProps) {
           </div>
         ))}
       </div>
+
+      {/* Watched by the observer: crossing into view pulls the next page. */}
+      <div ref={sentinelRef} aria-hidden className="h-px w-full" />
+
+      {hasMore && (
+        <div className="mt-10 flex flex-col items-center gap-3">
+          {loadError ? (
+            <>
+              <p className="text-sm text-gray-600">Kunde inte hämta fler bilder just nu.</p>
+              <button
+                type="button"
+                onClick={() => void loadMore()}
+                className="px-6 py-2.5 text-sm font-medium text-black rounded hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: 'var(--gul)' }}
+              >
+                Försök igen
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void loadMore()}
+              disabled={loadingMore}
+              className="px-6 py-2.5 text-sm font-medium text-black rounded hover:opacity-80 transition-opacity disabled:opacity-60"
+              style={{ backgroundColor: 'var(--pastel-green)' }}
+            >
+              {loadingMore ? 'Hämtar…' : `Visa fler (${total - items.length} kvar)`}
+            </button>
+          )}
+        </div>
+      )}
+
+      {!hasMore && items.length > 0 && (
+        <p className="mt-10 text-center text-xs text-gray-500">
+          Alla {items.length} bilder och filmer visas.
+        </p>
+      )}
 
       {open && (
         <div
