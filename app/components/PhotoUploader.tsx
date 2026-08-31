@@ -42,6 +42,14 @@ const DECODE_TIMEOUT_MS = 15_000
 /** Ceiling on our own API calls, so a stalled request cannot wedge the queue. */
 const REQUEST_TIMEOUT_MS = 30_000
 
+/**
+ * Grid thumbnail: long edge and quality. ~40-60 kB instead of ~1 MB, which is
+ * the difference between a gallery that loads in a blink and one that pulls
+ * the full wedding into every visitor's phone.
+ */
+const THUMB_MAX_DIMENSION = 640
+const THUMB_JPEG_QUALITY = 0.72
+
 /** How many files travel together. Small batches keep memory and progress sane on phones. */
 const BATCH_SIZE = 4
 const MAX_FILES_PER_BATCH_REQUEST = 30
@@ -186,6 +194,87 @@ async function downscaleImage(
   }
 }
 
+/**
+ * Small JPEG rendition for the gallery grid. Best-effort: null on any failure,
+ * and a photo without a thumbnail still uploads and shows (the grid falls back
+ * to the full file).
+ *
+ * For downscaled photos the source is the already-shrunk blob, so this decodes
+ * a 2560px JPEG rather than the original. Animated formats get a static first
+ * frame, which is exactly what a grid tile wants.
+ */
+async function makeImageThumbnail(source: Blob): Promise<Blob | null> {
+  try {
+    const decoding = createImageBitmap(source)
+    const bitmap = await withTimeout<ImageBitmap | null>(decoding, DECODE_TIMEOUT_MS, null)
+    if (!bitmap) {
+      decoding.then((late) => late.close()).catch(() => {})
+      return null
+    }
+    const scale = Math.min(1, THUMB_MAX_DIMENSION / Math.max(bitmap.width, bitmap.height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+    bitmap.close()
+    return await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/jpeg', THUMB_JPEG_QUALITY)
+    )
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Poster frame for a video, so the grid can show a still instead of loading
+ * video metadata for every clip. Same contract: null on failure.
+ */
+function makeVideoPoster(file: File): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file)
+    const video = document.createElement('video')
+    let settled = false
+    const finish = (blob: Blob | null) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      URL.revokeObjectURL(url)
+      resolve(blob)
+    }
+    const timer = setTimeout(() => finish(null), DECODE_TIMEOUT_MS)
+
+    video.muted = true
+    video.playsInline = true
+    video.preload = 'auto'
+    video.onloadeddata = () => {
+      // A frame slightly in avoids the black first frame many clips start on.
+      try {
+        video.currentTime = Math.min(0.1, video.duration || 0)
+      } catch {
+        finish(null)
+      }
+    }
+    video.onseeked = () => {
+      try {
+        const scale = Math.min(1, THUMB_MAX_DIMENSION / Math.max(video.videoWidth, video.videoHeight))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.max(1, Math.round(video.videoWidth * scale))
+        canvas.height = Math.max(1, Math.round(video.videoHeight * scale))
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return finish(null)
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        canvas.toBlob((blob) => finish(blob), 'image/jpeg', THUMB_JPEG_QUALITY)
+      } catch {
+        finish(null)
+      }
+    }
+    video.onerror = () => finish(null)
+    video.src = url
+  })
+}
+
 /** Best-effort duration and dimensions for a video, so the couple can sort clips later. */
 async function readVideoMetadata(
   file: File
@@ -321,24 +410,37 @@ export function PhotoUploader() {
         const type = resolveType(item.file)
         if (item.isVideo) {
           const meta = await readVideoMetadata(item.file)
-          return { item, blob: item.file as Blob, type, ...meta }
+          const thumbBlob = await makeVideoPoster(item.file)
+          return { item, blob: item.file as Blob, type, thumbBlob, ...meta }
         }
         const { blob, type: outType, width, height } = await downscaleImage(item.file)
-        return { item, blob, type: outType, width, height, duration: undefined }
+        const thumbBlob = await makeImageThumbnail(blob)
+        return { item, blob, type: outType, thumbBlob, width, height, duration: undefined }
       })
     )
 
     prepared.forEach((entry) => patchItem(entry.item.id, { status: 'waiting' }))
 
+    // One flat list of files: each entry's main blob, then its thumbnail when
+    // one was produced. thumbTargetIndex maps an entry back to its thumb slot.
+    const fileRequests: { content_type: string; size_bytes: number }[] = []
+    const mainTargetIndex: number[] = []
+    const thumbTargetIndex: (number | null)[] = []
+    prepared.forEach((entry) => {
+      mainTargetIndex.push(fileRequests.length)
+      fileRequests.push({ content_type: entry.type, size_bytes: entry.blob.size })
+      if (entry.thumbBlob) {
+        thumbTargetIndex.push(fileRequests.length)
+        fileRequests.push({ content_type: 'image/jpeg', size_bytes: entry.thumbBlob.size })
+      } else {
+        thumbTargetIndex.push(null)
+      }
+    })
+
     const response = await fetchWithTimeout(`${API_BASE}/photos/upload-urls`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        files: prepared.map((entry) => ({
-          content_type: entry.type,
-          size_bytes: entry.blob.size,
-        })),
-      }),
+      body: JSON.stringify({ files: fileRequests }),
     })
 
     if (!response.ok) {
@@ -355,18 +457,33 @@ export function PhotoUploader() {
 
     await Promise.all(
       prepared.map(async (entry, index) => {
-        const target = targets[index]
+        const target = targets[mainTargetIndex[index]]
         try {
           patchItem(entry.item.id, { status: 'uploading', progress: 0 })
           await uploadToBucket(target, entry.blob, entry.type, entry.item.file.name, (fraction) =>
             patchItem(entry.item.id, { progress: fraction })
           )
 
+          // The thumbnail is a nicety: if it fails to land, the photo still
+          // records without one and the grid falls back to the full file.
+          let thumbKey: string | null = null
+          const thumbSlot = thumbTargetIndex[index]
+          if (thumbSlot !== null && entry.thumbBlob) {
+            try {
+              const thumbTarget = targets[thumbSlot]
+              await uploadToBucket(thumbTarget, entry.thumbBlob, 'image/jpeg', 'thumb.jpg', () => {})
+              thumbKey = thumbTarget.key
+            } catch {
+              thumbKey = null
+            }
+          }
+
           const record = await fetchWithTimeout(`${API_BASE}/photos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               storage_key: target.key,
+              thumb_key: thumbKey,
               uploader_name: name || null,
               width: entry.width ?? null,
               height: entry.height ?? null,

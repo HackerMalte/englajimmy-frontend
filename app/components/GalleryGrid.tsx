@@ -7,6 +7,7 @@ import { extensionFor, saveMedia } from '../lib/saveMedia'
 export type GalleryItem = {
   id: number
   url: string
+  thumb_url?: string | null
   content_type: string
   width: number | null
   height: number | null
@@ -138,14 +139,27 @@ export function GalleryGrid({ items }: GalleryGridProps) {
             >
               {isVideo(item) ? (
                 <>
-                  {/* eslint-disable-next-line jsx-a11y/media-has-caption -- guest clips have no captions */}
-                  <video
-                    src={item.url}
-                    preload="metadata"
-                    muted
-                    playsInline
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
+                  {/* A poster still keeps the grid to images only — no video
+                      metadata is fetched until a clip is actually opened. */}
+                  {item.thumb_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- presigned URL, expires; not a static asset
+                    <img
+                      src={item.thumb_url}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  ) : (
+                    // eslint-disable-next-line jsx-a11y/media-has-caption -- guest clips have no captions
+                    <video
+                      src={item.url}
+                      preload="metadata"
+                      muted
+                      playsInline
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  )}
                   <span aria-hidden className="absolute inset-0 flex items-center justify-center">
                     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 text-black shadow-sm transition group-hover:bg-white">
                       ▶
@@ -155,7 +169,7 @@ export function GalleryGrid({ items }: GalleryGridProps) {
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element -- presigned URL, expires; not a static asset
                 <img
-                  src={item.url}
+                  src={item.thumb_url ?? item.url}
                   alt=""
                   loading="lazy"
                   decoding="async"
