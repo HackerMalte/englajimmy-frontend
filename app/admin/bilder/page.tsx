@@ -7,6 +7,7 @@ import { SaveFileButton } from './SaveFileButton'
 type Photo = {
   id: number
   storage_key: string
+  thumb_url?: string | null
   uploader_name?: string | null
   caption?: string | null
   content_type: string
@@ -171,13 +172,14 @@ export default async function AdminPhotosPage({
                           <video
                             src={photo.url ?? undefined}
                             controls
-                            preload="metadata"
+                            poster={photo.thumb_url ?? undefined}
+                            preload={photo.thumb_url ? 'none' : 'metadata'}
                             className="w-full h-full object-cover"
                           />
                         ) : (
                           // eslint-disable-next-line @next/next/no-img-element -- presigned URL, expires; not a static asset
                           <img
-                            src={photo.url ?? undefined}
+                            src={photo.thumb_url ?? photo.url ?? undefined}
                             alt={photo.caption ?? ''}
                             loading="lazy"
                             className="w-full h-full object-cover"
