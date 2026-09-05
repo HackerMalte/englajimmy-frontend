@@ -19,7 +19,15 @@ const ALLOWED_IMAGE_TYPES = [
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm']
 
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024
-const MAX_VIDEO_BYTES = 200 * 1024 * 1024
+/**
+ * 2 GB, matching the server. Sized so five minutes of video fits at any setting
+ * a phone is likely to be on: guests' uploads so far run about 110 MB/minute at
+ * 1080p, but 4K/30 is nearer 375 MB/minute, which puts five minutes at ~1.9 GB.
+ */
+const MAX_VIDEO_BYTES = 2 * 1024 * 1024 * 1024
+
+/** Past this, warn that the upload will take a while and must stay open. */
+const SLOW_UPLOAD_WARNING_BYTES = 300 * 1024 * 1024
 
 /** Long edge for uploaded photos: plenty for printing, a fraction of the bytes. */
 const MAX_IMAGE_DIMENSION = 2560
@@ -134,7 +142,11 @@ function rejectReason(file: File): string | null {
   const isVideo = isVideoType(type)
   if (!isVideo && !ALLOWED_IMAGE_TYPES.includes(type)) return 'Filtypen stöds inte'
   const limit = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES
-  if (file.size > limit) return `För stor (max ${limit / (1024 * 1024)} MB)`
+  if (file.size > limit) {
+    return isVideo
+      ? `För stor (max ${limit / 1024 ** 3} GB) — filma i 1080p i stället för 4K, eller kortare`
+      : `För stor (max ${limit / (1024 * 1024)} MB)`
+  }
   return null
 }
 
@@ -247,7 +259,10 @@ function makeVideoPoster(file: File): Promise<Blob | null> {
 
     video.muted = true
     video.playsInline = true
-    video.preload = 'auto'
+    // 'metadata', never 'auto': auto asks the browser to buffer the entire file,
+    // which for a 2 GB video on a phone is a memory problem. Seeking to a frame
+    // pulls only what it needs.
+    video.preload = 'metadata'
     video.onloadeddata = () => {
       // A frame slightly in avoids the black first frame many clips start on.
       try {
@@ -566,6 +581,10 @@ export function PhotoUploader() {
     if (inputRef.current) inputRef.current.value = ''
   }
 
+  // Anything big enough that the guest should expect to wait.
+  const hasSlowUpload = items.some(
+    (item) => item.status !== 'done' && item.file.size > SLOW_UPLOAD_WARNING_BYTES
+  )
   const doneCount = items.filter((item) => item.status === 'done').length
   const errorCount = items.filter((item) => item.status === 'error').length
   // When every failure has the same cause — a rate limit, a dropped
@@ -623,8 +642,8 @@ export function PhotoUploader() {
             Tryck här för att öppna kamerarullen, eller dra in filer
           </span>
           <span className="text-xs text-gray-500">
-            Bilder och korta filmer · max {MAX_IMAGE_BYTES / (1024 * 1024)} MB per bild,{' '}
-            {MAX_VIDEO_BYTES / (1024 * 1024)} MB per film
+            Bilder och filmer · max {MAX_IMAGE_BYTES / (1024 * 1024)} MB per bild,{' '}
+            {MAX_VIDEO_BYTES / 1024 ** 3} GB per film
           </span>
         </label>
       </div>
@@ -632,6 +651,13 @@ export function PhotoUploader() {
       {banner && (
         <p className="text-sm text-amber-700" role="status">
           {banner}
+        </p>
+      )}
+
+      {hasSlowUpload && (
+        <p className="text-sm text-gray-600" role="status">
+          Stora filmer tar en stund att ladda upp — håll sidan öppen tills det är
+          klart.
         </p>
       )}
 
