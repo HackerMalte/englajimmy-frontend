@@ -20,14 +20,26 @@ const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm']
 
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024
 /**
- * 2 GB, matching the server. Sized so five minutes of video fits at any setting
- * a phone is likely to be on: guests' uploads so far run about 110 MB/minute at
- * 1080p, but 4K/30 is nearer 375 MB/minute, which puts five minutes at ~1.9 GB.
+ * Must match MAX_VIDEO_BYTES in the backend's storage.py.
+ *
+ * Back to 200 MB because the server-side raise to 2 GB had to be reverted: that
+ * deploy would not come up. Advertising a limit the server does not honour is
+ * worse than a low limit — a guest waits through processing and a long upload,
+ * then gets told the file is too large by a page that just said it was fine.
+ *
+ * Raise this only together with the backend, never ahead of it.
  */
-const MAX_VIDEO_BYTES = 2 * 1024 * 1024 * 1024
+const MAX_VIDEO_BYTES = 200 * 1024 * 1024
 
 /** Past this, warn that the upload will take a while and must stay open. */
-const SLOW_UPLOAD_WARNING_BYTES = 300 * 1024 * 1024
+const SLOW_UPLOAD_WARNING_BYTES = 100 * 1024 * 1024
+
+/** Whole MB below a gigabyte, GB above it — so a limit never reads "0.19 GB". */
+function formatLimit(bytes: number): string {
+  return bytes >= 1024 ** 3
+    ? `${Number((bytes / 1024 ** 3).toFixed(1))} GB`
+    : `${Math.round(bytes / (1024 * 1024))} MB`
+}
 
 /** Long edge for uploaded photos: plenty for printing, a fraction of the bytes. */
 const MAX_IMAGE_DIMENSION = 2560
@@ -144,8 +156,8 @@ function rejectReason(file: File): string | null {
   const limit = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES
   if (file.size > limit) {
     return isVideo
-      ? `För stor (max ${limit / 1024 ** 3} GB) — filma i 1080p i stället för 4K, eller kortare`
-      : `För stor (max ${limit / (1024 * 1024)} MB)`
+      ? `För stor (max ${formatLimit(limit)}) — spela in en kortare bit`
+      : `För stor (max ${formatLimit(limit)})`
   }
   return null
 }
@@ -642,8 +654,8 @@ export function PhotoUploader() {
             Tryck här för att öppna kamerarullen, eller dra in filer
           </span>
           <span className="text-xs text-gray-500">
-            Bilder och filmer · max {MAX_IMAGE_BYTES / (1024 * 1024)} MB per bild,{' '}
-            {MAX_VIDEO_BYTES / 1024 ** 3} GB per film
+            Bilder och filmer · max {formatLimit(MAX_IMAGE_BYTES)} per bild,{' '}
+            {formatLimit(MAX_VIDEO_BYTES)} per film
           </span>
         </label>
       </div>
