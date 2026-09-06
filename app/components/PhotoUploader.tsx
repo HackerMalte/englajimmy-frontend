@@ -20,19 +20,28 @@ const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm']
 
 const MAX_IMAGE_BYTES = 25 * 1024 * 1024
 /**
- * Must match MAX_VIDEO_BYTES in the backend's storage.py.
+ * Must match MAX_VIDEO_BYTES in the backend's storage.py, which is now 2 GB
+ * (englajimmy-backend 4d8212a, verified live: 2 GB accepted, 2 GB + 1 byte
+ * rejected).
  *
- * Back to 200 MB because the server-side raise to 2 GB had to be reverted: that
- * deploy would not come up. Advertising a limit the server does not honour is
- * worse than a low limit — a guest waits through processing and a long upload,
- * then gets told the file is too large by a page that just said it was fine.
+ * Advertising a limit the server does not honour is worse than a low limit — a
+ * guest waits through processing and a long upload, then gets told the file is
+ * too large by a page that just said it was fine. That is exactly what happened
+ * when this was raised ahead of the backend.
  *
- * Raise this only together with the backend, never ahead of it.
+ * So: raise this only after the backend is raised and its deploy is healthy.
+ * Never ahead of it.
  */
-const MAX_VIDEO_BYTES = 200 * 1024 * 1024
+const MAX_VIDEO_BYTES = 2 * 1024 ** 3
 
-/** Past this, warn that the upload will take a while and must stay open. */
-const SLOW_UPLOAD_WARNING_BYTES = 100 * 1024 * 1024
+/**
+ * Past this, warn that the upload will take a while and must stay open.
+ *
+ * 300 MB is roughly three minutes of the footage guests are actually filming
+ * (~110 MB/minute, all 1080p or 720p). Warning much below that would fire on
+ * almost every video and stop meaning anything.
+ */
+const SLOW_UPLOAD_WARNING_BYTES = 300 * 1024 * 1024
 
 /** Whole MB below a gigabyte, GB above it — so a limit never reads "0.19 GB". */
 function formatLimit(bytes: number): string {
@@ -156,7 +165,7 @@ function rejectReason(file: File): string | null {
   const limit = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES
   if (file.size > limit) {
     return isVideo
-      ? `För stor (max ${formatLimit(limit)}) — spela in en kortare bit`
+      ? `För stor (max ${formatLimit(limit)}) — spela in en kortare bit, eller filma i 1080p`
       : `För stor (max ${formatLimit(limit)})`
   }
   return null
